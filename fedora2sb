@@ -9,6 +9,9 @@ STARTDIR="/tmp"
 OUTPUTDIR="/mnt/home/data/Downloads"
 ROOTFS="$(wget -q -O - https://ftp-stud.hs-esslingen.de/pub/fedora/linux/development/rawhide/Container/x86_64/images/ |grep Container-Base | grep -o -P '(?<=href=").*(?=")' | cut -d "\"" -f1)"
 
+whoami
+exit
+
 fn_download_and_extract() {
     cd $STARTDIR
     if [ ! -f $ROOTFS ]; then
