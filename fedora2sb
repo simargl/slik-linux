@@ -1,0 +1,55 @@
+#!/bin/bash
+# 
+# Author: simargl <https://github.com/simargl>
+# License: GPL v3
+
+VERSION="0.0.1"
+
+STARTDIR="/tmp"
+OUTPUTDIR="/mnt/home/data/Downloads"
+ROOTFS="$(wget -q -O - https://ftp-stud.hs-esslingen.de/pub/fedora/linux/development/rawhide/Container/x86_64/images/ |grep Container-Base | grep -o -P '(?<=href=").*(?=")' | cut -d "\"" -f1)"
+
+fn_download_and_extract() {
+    cd $STARTDIR
+    if [ ! -f $ROOTFS ]; then
+        wget https://ftp-stud.hs-esslingen.de/pub/fedora/linux/development/rawhide/Container/x86_64/images/$ROOTFS
+    fi
+    if [ ! -d root.x86_64 ]; then
+        mkdir root.x86_64
+    fi
+    tar -xf $ROOTFS
+    tar -xf */layer.tar -C root.x86_64
+}
+
+fn_build_and_compress() {
+    # prepare
+    cd $STARTDIR
+    cp /etc/resolv.conf root.x86_64/etc/
+    rm root.x86_64/etc/mtab; cp -af /proc/self/mounts root.x86_64/etc/mtab
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "dnf update -y"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "dnf install transmission-gtk lxterminal gtksourceview3 \
+    xorg-x11-server-Xorg xorg-x11-xinit feh nss wget libXScrnSaver alsa-utils zathura-pdf-poppler git \
+    setxkbmap desktop-file-utils mesa-dri-drivers psmisc xset dbus-x11 redshift librsvg2 bsdtar -y"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "dnf remove pipewire -y"
+    ln -sf bash $STARTDIR/root.x86_64/usr/bin/sh
+    # cache
+    rm -r $STARTDIR/root.x86_64/usr/share/mime/globs
+    rm -r $STARTDIR/root.x86_64/usr/share/icons/hicolor/icon-theme.cache
+    rm -r $STARTDIR/root.x86_64/usr/share/glib-2.0/schemas/gschemas.compiled
+    # other
+    rm -r $STARTDIR/root.x86_64/usr/lib/locale
+    rm -r $STARTDIR/root.x86_64/usr/share/doc
+    rm -r $STARTDIR/root.x86_64/usr/share/info
+    rm -r $STARTDIR/root.x86_64/usr/share/licenses
+    rm -r $STARTDIR/root.x86_64/usr/share/locale
+    rm -r $STARTDIR/root.x86_64/usr/share/man
+    find $STARTDIR/root.x86_64/usr/lib64/dri -type f -not -name swrast_dri* -not -name crocus_dri* -not -name iris_dri* | xargs rm
+    find $STARTDIR/root.x86_64/usr/lib64/gallium-pipe -type f -not -name pipe_swrast* -not -name pipe_crocus* -not -name pipe_iris* | xargs rm
+    find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs rm
+    # compress
+    if [ ! -d $OUTPUTDIR ]; then mkdir -p $OUTPUTDIR; fi
+    mksquashfs root.x86_64/ $OUTPUTDIR/fs-fedora.sb
+}
+
+fn_download_and_extract
+fn_build_and_compress
