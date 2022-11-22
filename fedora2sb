@@ -43,12 +43,12 @@ fn_build_and_compress() {
     sudo rm -r $STARTDIR/root.x86_64/usr/share/licenses
     sudo rm -r $STARTDIR/root.x86_64/usr/share/locale
     sudo rm -r $STARTDIR/root.x86_64/usr/share/man
-    sudo find $STARTDIR/root.x86_64/usr/lib64/dri -type f -not -name swrast_dri* -not -name crocus_dri* -not -name iris_dri* | xargs rm
-    sudo find $STARTDIR/root.x86_64/usr/lib64/gallium-pipe -type f -not -name pipe_swrast* -not -name pipe_crocus* -not -name pipe_iris* | xargs rm
-    sudo find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs rm
+    find $STARTDIR/root.x86_64/usr/lib64/dri -type f -not -name swrast_dri* -not -name crocus_dri* -not -name iris_dri* | xargs sudo rm
+    find $STARTDIR/root.x86_64/usr/lib64/gallium-pipe -type f -not -name pipe_swrast* -not -name pipe_crocus* -not -name pipe_iris* | xargs sudo rm
+    find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs sudo rm
     # compress
     if [ ! -d $OUTPUTDIR ]; then sudo mkdir -p $OUTPUTDIR; fi
-    sudo mksquashfs root.x86_64/ $OUTPUTDIR/fs-fedora.sb
+    sudo mksquashfs root.x86_64/ $OUTPUTDIR/fs-fedora.sb -comp gzip -b 1024k
 }
 
 fn_download_and_extract
