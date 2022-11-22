@@ -23,9 +23,9 @@ fn_download_and_extract() {
 
 fn_build_and_compress() {
     # prepare
-    sudo cd $STARTDIR
+    cd $STARTDIR
     sudo cp /etc/resolv.conf root.x86_64/etc/
-    sudo rm root.x86_64/etc/mtab; cp -af /proc/self/mounts root.x86_64/etc/mtab
+    sudo rm root.x86_64/etc/mtab; sudo cp -af /proc/self/mounts root.x86_64/etc/mtab
     sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "dnf update -y"
     sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "dnf install transmission-gtk lxterminal gtksourceview3 \
     xorg-x11-server-Xorg xorg-x11-xinit feh nss wget libXScrnSaver alsa-utils zathura-pdf-poppler git \
