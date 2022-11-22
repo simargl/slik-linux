@@ -10,7 +10,7 @@ OUTPUTDIR="/mnt/home/data/Downloads"
 ROOTFS="$(wget -q -O - https://ftp-stud.hs-esslingen.de/pub/fedora/linux/development/rawhide/Container/x86_64/images/ |grep Container-Base | grep -o -P '(?<=href=").*(?=")' | cut -d "\"" -f1)"
 
 fn_download_and_extract() {
-    sudo cd $STARTDIR
+    cd $STARTDIR
     if [ ! -f $ROOTFS ]; then
         sudo wget https://ftp-stud.hs-esslingen.de/pub/fedora/linux/development/rawhide/Container/x86_64/images/$ROOTFS
     fi
