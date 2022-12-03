@@ -2,7 +2,7 @@ name: Makefile CI
 
 on:
   schedule:
-    - cron: '0 12 * * SAT'
+    - cron: '0 6 * * SAT'
   push:
     branches: [ "main" ]
   pull_request:
