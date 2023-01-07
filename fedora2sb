@@ -29,7 +29,8 @@ fn_build_and_compress() {
     sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "dnf update -y"
     sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "dnf install transmission-gtk lxterminal gtksourceview3 \
     xorg-x11-server-Xorg xorg-x11-xinit feh nss wget libXScrnSaver alsa-utils zathura-pdf-poppler git \
-    setxkbmap desktop-file-utils mesa-dri-drivers psmisc xset dbus-x11 redshift librsvg2 bsdtar syslinux xorriso -y"
+    setxkbmap desktop-file-utils mesa-dri-drivers psmisc xset dbus-x11 redshift librsvg2 bsdtar \
+    syslinux xorriso cpio -y"
     sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "dnf remove pipewire -y"
     sudo ln -sf bash $STARTDIR/root.x86_64/usr/bin/sh
     # cache
