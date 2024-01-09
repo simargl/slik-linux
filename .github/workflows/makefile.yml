@@ -12,7 +12,7 @@ jobs:
     - uses: actions/checkout@v3
 
     - name: Install dependencies
-      run: sudo apt-get update && sudo apt-get install -y wget squashfs-tools
+      run: sudo apt-get update
 
     - name: Compile
       run: sh 2slik2sb
