@@ -19,7 +19,7 @@ fn_download_and_extract() {
         fi
         sudo tar -xf rootfs-slik-linux-$STAGE-$S-$VERSION.tar.xz -C root.x86_64
     done
-    sudo mv root.x86_64/root.spkg/* root.x86_64; rmdir root.x86_64/root.spkg
+    sudo mv root.x86_64/root.spkg/* root.x86_64; sudo rmdir root.x86_64/root.spkg
 }
 
 fn_build_and_compress() {
