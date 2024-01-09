@@ -1,3 +1,3 @@
 # slik-linux
 
-distro builder
+squashfs filesystem builder
