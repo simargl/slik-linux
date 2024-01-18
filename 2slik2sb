@@ -5,7 +5,7 @@
 
 STARTDIR="/tmp"
 OUTPUTDIR="/mnt/home/data/Downloads"
-SETS=("core" "graphics" "ui")
+SETS=("base" "core" "graphics" "ui")
 STAGE="stage0"
 VERSION="a5"
 
@@ -26,6 +26,7 @@ fn_build_and_compress() {
     # prepare
     cd $STARTDIR
     sudo cp /etc/resolv.conf root.x86_64/etc/
+    sudo chroot root.spkg /bin/bash -c "ldconfig"
     # cache
     sudo rm -r $STARTDIR/root.x86_64/usr/share/mime/globs*
     # other
