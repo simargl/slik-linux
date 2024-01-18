@@ -26,7 +26,7 @@ fn_build_and_compress() {
     # prepare
     cd $STARTDIR
     sudo cp /etc/resolv.conf root.x86_64/etc/
-    sudo chroot root.spkg /bin/bash -c "ldconfig"
+    sudo chroot root.x86_64 /bin/bash -c "ldconfig"
     # cache
     sudo rm -r $STARTDIR/root.x86_64/usr/share/mime/globs*
     # other
