@@ -1,8 +1,6 @@
 name: Makefile CI sb
 
 on:
-  schedule:
-    - cron: '0 5 * * SUN'
   workflow_dispatch: 
 
 jobs:
