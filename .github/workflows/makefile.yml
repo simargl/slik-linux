@@ -15,7 +15,7 @@ jobs:
       run: sudo apt-get update; sudo ln -sf /bin/bash /bin/sh
 
     - name: Compile
-      run: sh 2slik2sb
+      run: sh 2ubuntu2sb
 
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
