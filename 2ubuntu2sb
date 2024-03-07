@@ -8,8 +8,8 @@ OUTPUTDIR="$HOME/output"
 ROOTFS="ubuntu-noble-oci-amd64-root.tar.gz"
 
 fn_download_and_extract() {
-    sudo cd $STARTDIR
-    if [ ! -f $ROOTFS ]; then sudo wget "https://git.launchpad.net/cloud-images/+oci/ubuntu-base/plain/ubuntu-noble-oci-amd64-root.tar.gz?h=noble-24.04" -O $ROOTFS; fi
+    cd $STARTDIR
+    if [ ! -f $ROOTFS ]; then wget "https://git.launchpad.net/cloud-images/+oci/ubuntu-base/plain/ubuntu-noble-oci-amd64-root.tar.gz?h=noble-24.04" -O $ROOTFS; fi
     if [ -d root.x86_64 ]; then sudo rm -r root.x86_64; fi
     sudo mkdir root.x86_64
     sudo tar -xf $ROOTFS -C root.x86_64
@@ -17,7 +17,7 @@ fn_download_and_extract() {
 
 fn_build_and_compress() {
     # prepare
-    sudo cd $STARTDIR
+    cd $STARTDIR
     sudo cp /etc/resolv.conf root.x86_64/etc/
     if [ -f root.x86_64/etc/mtab ]; then sudo rm root.x86_64/etc/mtab; fi
     if [ -f root.x86_64/dev/null ]; then sudo rm root.x86_64/dev/null; fi   
