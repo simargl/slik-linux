@@ -21,4 +21,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: fs-ubuntu.sb
-        path: /home/runner/output/fs-slik.sb
+        path: /home/runner/output/fs-ubuntu.sb
