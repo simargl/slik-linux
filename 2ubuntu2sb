@@ -37,7 +37,7 @@ fn_build_and_compress() {
     labwc xwayland geany waybar swaybg gammastep fonts-font-awesome \
     libharfbuzz-gobject0 udev ca-certificates mako-notifier yt-dlp \
     xz-utils adb grim curl whiptail rsync bzip2 mpv mpg123 dhcpcd-base \
-    libfltk1.3-dev build-essential libsdl2-image-2.0-0 -y"
+    libfltk1.3-dev build-essential libsdl2-image-2.0-0 gsettings-desktop-schemas -y"
     sudo ln -sf bash $STARTDIR/root.x86_64/usr/bin/sh
     # cache
     sudo rm -r $STARTDIR/root.x86_64/usr/share/{applications/mimeinfo.cache,mime/globs,icons/hicolor/icon-theme.cache,glib-2.0/schemas/gschemas.compiled}
