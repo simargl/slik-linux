@@ -45,6 +45,7 @@ fn_build_and_compress() {
     sudo rm -r $STARTDIR/root.x86_64/{bin.usr-is-merged,lib.usr-is-merged,sbin.usr-is-merged}
     sudo rm -r $STARTDIR/root.x86_64/usr/lib/locale
     sudo rm -r $STARTDIR/root.x86_64/usr/share/{doc,info,locale,man}
+    sudo rm -r $STARTDIR/root.x86_64/usr/share/icons/{Humanity,Humanity-Dark,ubuntu-mono-dark,ubuntu-mono-light}
     sudo find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | sudo xargs rm
     # compress
     if [ ! -d $OUTPUTDIR ]; then sudo mkdir -p $OUTPUTDIR; fi
