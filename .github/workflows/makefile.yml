@@ -1,0 +1,24 @@
+name: Makefile CI sb
+
+on:
+  workflow_dispatch: 
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: sudo apt-get update; sudo ln -sf /bin/bash /bin/sh
+
+    - name: Compile
+      run: sh 2ubuntu2sb
+
+    - name: Archive artifacts
+      uses: actions/upload-artifact@v4
+      with:
+        name: fs-ubuntu.sb
+        path: /home/runner/output/fs-ubuntu.sb
