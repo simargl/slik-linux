@@ -13,7 +13,7 @@ fn_download_and_extract() {
         sudo wget https://mirror.alwyzon.net/archlinux/iso/2024.04.01/$ROOTFS
     fi
     if [ -d root.x86_64 ]; then sudo rm -r root.x86_64; fi
-    sudo bsdtar -xf $ROOTFS
+    sudo tar -xf $ROOTFS
 }
 
 fn_build_and_compress() {
@@ -21,7 +21,7 @@ fn_build_and_compress() {
     cd $STARTDIR 
     sudo mkdir -p root.x86_64/proc/self/
     sudo cp -af /proc/self/mounts root.x86_64/proc/self/mounts
-    sudo mkdir -p root.x86_64/dev/fd/; touch root.x86_64/dev/fd/63
+    sudo mkdir -p root.x86_64/dev/fd/; sudo touch root.x86_64/dev/fd/63
     sudo cp /etc/resolv.conf root.x86_64/etc/
     sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "echo -e 'Server=https://mirror.alwyzon.net/archlinux/\$repo/os/\$arch'>/etc/pacman.d/mirrorlist"
     sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "echo -e '[aurci2]\nSigLevel = Optional TrustAll\nServer = https://github.com/simargl/aurci2/releases/download/aurci2' >> /etc/pacman.conf"
