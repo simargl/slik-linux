@@ -15,10 +15,10 @@ jobs:
       run: sudo apt-get update; sudo ln -sf /bin/bash /bin/sh
 
     - name: Compile
-      run: sh 2ubuntu2sb
+      run: sh 2arch2sb
 
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: fs-ubuntu.sb
-        path: /home/runner/output/fs-ubuntu.sb
+        name: fs-arch.sb
+        path: /home/runner/output/fs-arch.sb
