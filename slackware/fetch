@@ -15,7 +15,7 @@ if [[ $EUID -ne 0 ]]; then echo "This script must be run as root" && exit 1; fi
 
 # download file with wget ($1=filename; $2=target directory; $3=comment)
 fn_download_file() {
-    wget -q --show-progress --no-check-certificate $1 -P $2
+    wget -nv --no-check-certificate $1 -P $2
 }
 
 fn_repo_update() {
