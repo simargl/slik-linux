@@ -41,6 +41,7 @@ speex
 talloc
 tevent
 SDL2
+SDL2_image
 libXpresent
 libedit
 libplacebo
