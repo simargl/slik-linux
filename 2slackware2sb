@@ -26,8 +26,8 @@ fn_build_and_compress() {
     sudo cp /usr/bin/fetch $STARTDIR/root.x86_64/usr/bin/
     sudo cp /usr/bin/fetch $STARTDIR/root.x86_64/tmp/
     sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch ug"
-    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat /tmp/part2 | tr '\n' ' ')"
-    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat /tmp/part3 | tr '\n' ' ')"
+    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part2 | tr '\n' ' ')"
+    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part3 | tr '\n' ' ')"
     sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch cc"
     # cache
     sudo rm -r $STARTDIR/root.x86_64/usr/share/mime/globs
