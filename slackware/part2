@@ -152,6 +152,7 @@ xkeyboard-config
 xorg-server
 xorg-server-xwayland
 xorgproto
+xorriso
 xprop
 xrandr
 xset
