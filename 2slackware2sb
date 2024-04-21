@@ -8,7 +8,7 @@ OUTPUTDIR="$HOME/output"
 ROOTFS=""
 
 fn_download_and_extract() {
-    sudo cp slackware/fetch /usr/bin/
+    sudo install -Dm755 slackware/fetch /usr/bin/fetch
     sudo cp slackware/{part1,part2,part3} $STARTDIR
     cd $STARTDIR
     sudo fetch ug; sudo fetch cc; sudo fetch dl $(cat part1 | tr '\n' ' ')
