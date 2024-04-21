@@ -46,7 +46,7 @@ fn_build_and_compress() {
     sudo sed -i 's/(urxvt) {urxvt}/(console) {system-terminal-emulator}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
     sudo sed -i 's/(firefox) {firefox}/(web) {system-web-browser}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
     sudo sed -i 's/(konqueror) {kfmclient openProfile filemanagement}/(files) {system-file-manager}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
-    sudo echo "exec fluxbox">$STARTDIR/root.x86_64/root/.xinitrc
+    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "echo exec fluxbox>/root/.xinitrc"
     # remove root warning
     sudo sed -i 's/geteuid/getppid/' $STARTDIR/root.x86_64/usr/lib64/libmousepad.so.0.0.0
     # compress
