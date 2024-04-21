@@ -8,9 +8,9 @@ OUTPUTDIR="$HOME/output"
 ROOTFS=""
 
 fn_download_and_extract() {
-    cp slackware/fetch /usr/bin/
+    sudo cp slackware/fetch /usr/bin/
     sudo cp slackware/{part1,part2,part3} $STARTDIR
-    sudo cd $STARTDIR
+    cd $STARTDIR
     sudo fetch ug; sudo fetch cc; sudo fetch dl $(cat part1 | tr '\n' ' ')
     if [ -d root.x86_64 ]; then sudo rm -r root.x86_64; fi
     sudo rm *.t?z 2>/dev/null
