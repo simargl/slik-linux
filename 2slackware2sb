@@ -6,8 +6,8 @@
 . ./config
 fn_prepare_output_dir
 
-STARTDIR="/tmp"
-OUTPUTDIR="$PWD/output/iso/$SYSNAME/modules"
+STARTDIR="$HOME"
+OUTPUTDIR="$HOME/output"
 ROOTFS=""
 
 fn_download_and_extract() {
