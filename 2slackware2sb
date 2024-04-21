@@ -1,0 +1,62 @@
+#!/bin/bash
+# 
+# Author: simargl <https://github.com/simargl>
+# License: GPL v3
+
+. ./config
+fn_prepare_output_dir
+
+STARTDIR="/tmp"
+OUTPUTDIR="$PWD/output/iso/$SYSNAME/modules"
+ROOTFS=""
+
+fn_download_and_extract() {
+    sudo cp slackware/fetch /usr/bin/
+    sudo cp slackware/{part1,part2,part3} $STARTDIR
+    sudo cd $STARTDIR
+    sudo fetch ug; sudo fetch cc; sudo fetch dl $(cat part1 | tr '\n' ' ')
+    if [ -d root.x86_64 ]; then sudo rm -r root.x86_64; fi
+    sudo rm *.t?z 2>/dev/null
+    sudo mv /var/cache/slack/* .
+    sudo fetch xa
+    sudo mv install root.x86_64
+}
+
+fn_build_and_compress() {
+    # prepare
+    cd $STARTDIR
+    sudo cp /etc/resolv.conf root.x86_64/etc/
+    sudo cp /usr/bin/fetch $STARTDIR/root.x86_64/usr/bin/
+    sudo cp /usr/bin/fetch $STARTDIR/root.x86_64/tmp/
+    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch ug"
+    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat /tmp/part2 | tr '\n' ' ')"
+    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat /tmp/part3 | tr '\n' ' ')"
+    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch cc"
+    # cache
+    sudo rm -r $STARTDIR/root.x86_64/usr/share/mime/globs
+    sudo rm -r $STARTDIR/root.x86_64/usr/share/icons/hicolor/icon-theme.cache
+    sudo rm -r $STARTDIR/root.x86_64/usr/share/glib-2.0/schemas/gschemas.compiled
+    sudo rm -r $STARTDIR/root.x86_64/usr/lib64/gdk-pixbuf-2.0/2.10.0/loaders.cache
+    # other
+    sudo rm -r $STARTDIR/root.x86_64/usr/doc
+    sudo rm -r $STARTDIR/root.x86_64/usr/info
+    sudo rm -r $STARTDIR/root.x86_64/usr/share/locale
+    sudo rm -r $STARTDIR/root.x86_64/usr/man
+    sudo rm -r $STARTDIR/root.x86_64/etc/asound.conf
+    find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | sudo xargs rm
+    # wm settings
+    sudo sed -i 's/bloe/MerleyKay/g' $STARTDIR/root.x86_64/usr/share/fluxbox/init
+    sudo sed -i 's/(urxvt) {urxvt}/(console) {system-terminal-emulator}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
+    sudo sed -i 's/(firefox) {firefox}/(web) {system-web-browser}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
+    sudo sed -i 's/(konqueror) {kfmclient openProfile filemanagement}/(files) {system-file-manager}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
+    sudo echo "exec fluxbox">$STARTDIR/root.x86_64/root/.xinitrc
+    # remove root warning
+    sudo sed -i 's/geteuid/getppid/' $STARTDIR/root.x86_64/usr/lib64/libmousepad.so.0.0.0
+    # compress
+    if [ ! -d $OUTPUTDIR ]; then sudo mkdir -p $OUTPUTDIR; fi
+    if [ -f $OUTPUTDIR/fs-slackware.sb ]; then sudo rm $OUTPUTDIR/fs-slackware.sb; fi
+    sudo mksquashfs root.x86_64/ $OUTPUTDIR/fs-slackware.sb -comp gzip -b 1024k
+}
+
+fn_download_and_extract
+fn_build_and_compress

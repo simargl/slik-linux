@@ -1,0 +1,310 @@
+#!/bin/bash
+# 
+# Author: simargl <https://github.com/simargl>
+# License: GPL v3
+
+# Variables
+ARCH="x86_64"
+DBPATH="/var/lib/slack"
+CACHEDIR="/var/cache/slack"
+REPOSITORY=('https://mirror.slackware.ro/slackware64-current/patches'
+            'https://mirror.slackware.ro/slackware64-current/slackware64')
+   
+# root check      
+if [[ $EUID -ne 0 ]]; then echo "This script must be run as root" && exit 1; fi
+
+# download file with wget ($1=filename; $2=target directory; $3=comment)
+fn_download_file() {
+    echo -en "\\033[7G""\e[0m""$3""\\033[0G"
+    wget --progress=dot $1 -P $2 --no-check-certificate 2>&1 | grep --line-buffered "%" | \
+    sed -u -e "s,\.,,g" | awk '{printf("\b\b\b\b%4s", $2)}'
+    echo 
+}
+
+fn_repo_update() {
+    if [ ! -f $DBPATH/packages.list ]; then
+        echo -e "Synchronizing package databases..."
+        for ((i=0; i<${#REPOSITORY[@]}; ++i)); do
+            fn_download_file ${REPOSITORY[i]}/CHECKSUMS.md5 $DBPATH ${REPOSITORY[i]} "$(basename ${REPOSITORY[i]})"
+            cd $DBPATH || exit
+            grep -E '\.tgz$|\.txz$' CHECKSUMS.md5 | cut -c 36- | sed "s|^|${REPOSITORY[i]}|g" | sort >> packages.list
+            rm CHECKSUMS.md5
+        done
+        echo "Repositories: ""${#REPOSITORY[@]}""  Packages: ""$(grep -c ^ packages.list)"
+    fi
+}
+
+fn_repo_upgrade() {
+    [ -f $DBPATH/packages.list ] && rm $DBPATH/packages.list
+    fn_repo_update
+}
+
+fn_pkg_search() {
+    if [[ $ARG && ${#ARG} -gt 1 ]]; then
+        PKGSEARCH=$(grep $ARG $DBPATH/packages.list)
+        if [[ "$PKGSEARCH" != "" ]]; then
+            RES=0
+            for P in $PKGSEARCH; do 
+                basenameR="$(basename $P)"
+                longnameR="$(echo $basenameR | sed 's/-[^-]*$//'| sed 's/-[^-]*$//')"
+                pkgnameR="$(echo $longnameR | sed 's/-[^-]*$//')"
+                pkgverR="$(echo ${longnameR##*-})"
+                if [ -d $DBPATH/installed/$pkgnameR ]; then 
+                    . $DBPATH/installed/$pkgnameR/pkginfo
+                    if [ "$pkgverR" == "$pkgver" ]; then I="i"; else I="o"; fi
+                fi
+                echo -e "$I""\\033[7G""$pkgnameR"" ($pkgverR)"
+                unset I
+                ((RES++))
+            done
+            echo "Results: $RES"
+        fi
+    fi
+}
+
+fn_get_pkgmatch() {
+    grep /$1-[0-9] $DBPATH/packages.list | head -1
+}
+
+fn_check_pkgmatch_exists() {
+    unset MISSING
+    LIST="$@"
+    for ONE in $LIST; do  
+        PKGMATCH="$(fn_get_pkgmatch $ONE)"
+        if [[ $PKGMATCH == "" ]]; then
+            MISSING+=("$ONE"); 
+        fi
+    done
+    if [[ ${#MISSING[@]} != 0 ]]; then
+        for i in ${MISSING[*]}; do
+            echo "E: Unable to locate package $i"
+        done
+        exit 1
+    fi
+}
+
+fn_pkg_download() {
+    if [ $ARG ]; then
+        PKGMATCH=$(fn_get_pkgmatch $ARG)
+        if [[ "$PKGMATCH" != "" ]]; then
+            if [ ! -f $CACHEDIR/$(basename $PKGMATCH) ]; then
+                fn_download_file $PKGMATCH $CACHEDIR "$(basename $PKGMATCH)"
+            else
+                echo "Using cached $(basename $PKGMATCH)"
+            fi
+            if [ ! -f $CACHEDIR/$(basename $PKGMATCH) ]; then    
+                echo -e "$(basename $PKGMATCH) download failed"
+                exit 1
+            fi
+        else
+            echo "E: Unable to locate package $ARG"
+        fi
+    fi
+}
+
+fn_pkg_download_all() {
+    fn_check_pkgmatch_exists $ARGD
+    for ONE in $ARGD; do
+        ARG="$ONE"
+        fn_pkg_download
+    done
+}
+
+fn_get_metadata() {
+    longname="$(echo $1 | sed 's/-[^-]*$//'| sed 's/-[^-]*$//')"
+    pkgname="$(echo $longname | sed  's/-[^-]*$//')"
+    pkgver="$(echo ${longname##*-})"
+    pkgrel="$(echo ${1##*-} | sed 's/.t.z//')"
+    pkgdesc="$1"
+    arch="$(echo $1 | sed 's/-[^-]*$//' | sed 's/^.*-//')"
+    url="http://www.slackware.com/packages/"
+    license="GPL"
+    depends=""
+}
+
+fn_write_metadata() {
+    fn_get_metadata $1 $2
+    mkdir -p $2/$DBPATH/installed/$pkgname
+    # pkginfo
+    echo pkgname="$pkgname" > $2/$DBPATH/installed/$pkgname/pkginfo
+    echo pkgver="$pkgver" >> $2/$DBPATH/installed/$pkgname/pkginfo
+    echo pkgrel="$pkgrel" >> $2/$DBPATH/installed/$pkgname/pkginfo
+    echo pkgdesc="\"$pkgdesc"\" >> $2/$DBPATH/installed/$pkgname/pkginfo
+    echo arch="('$arch')" >> $2/$DBPATH/installed/$pkgname/pkginfo
+    echo url="\"$url"\" >> $2/$DBPATH/installed/$pkgname/pkginfo
+    echo license="('$license')" >> $2/$DBPATH/installed/$pkgname/pkginfo
+    echo depends="( $depends )" >> $2/$DBPATH/installed/$pkgname/pkginfo
+    # files.list
+    tar -tvf $1 | awk '!/^d/ {print $NF}' | grep -v "install/" | sed 's/^/\//' > $2/$DBPATH/installed/$pkgname/files.list
+}
+
+fn_pkg_extract() {
+    if [[ $ARG != "" && -f $ARG ]]; then
+        echo "Extracting $ARG"
+        tar -xf $ARG
+    else
+        exit 1
+    fi
+}
+
+fn_pkg_extract_all() {
+    for i in *.t?z; do
+        [[ -e $i ]] || break
+        ARG=$i
+        echo "Installing $ARG --target-root=./install"
+		[ ! -d install ] && mkdir install
+        tar -xf $ARG -C install
+        if [ -f "install/install/doinst.sh" ]; then cd install && sh ./install/doinst.sh 2>/dev/null; cd $OLDPWD || exit; fi
+        fn_write_metadata $ARG install
+        if [ -d install/install ]; then rm -r install/install; fi
+    done
+}
+
+fn_pkg_install_local() {
+    if [[ $ARG != "" && -f $ARG ]]; then
+        echo "Installing $ARG"
+        tar -xf $ARG -C /
+        if [ -f "/install/doinst.sh" ]; then cd / && sh ./install/doinst.sh 2>/dev/null; cd $OLDPWD || exit; fi
+        fn_write_metadata $ARG /
+        if [ -d /install ]; then rm -r /install; fi
+        fn_pkg_post_actions
+    else
+        exit 1
+    fi
+}
+
+fn_pkg_post_actions() {
+    ICONS=$(grep /usr/share/icons/hicolor         $DBPATH/installed/$pkgname/files.list)
+    DESKTOP=$(grep /usr/share/applications        $DBPATH/installed/$pkgname/files.list)
+    GSETTINGS=$(grep /usr/share/glib-2.0/schemas  $DBPATH/installed/$pkgname/files.list)
+    FONTS=$(grep /usr/share/fonts/TTF             $DBPATH/installed/$pkgname/files.list)
+    fn_pkg_post_actions_run
+}
+
+fn_pkg_post_actions_run() {
+    if [ "$ICONS" ]; then gtk-update-icon-cache /usr/share/icons/hicolor; fi
+    if [ "$DESKTOP" ]; then update-desktop-database; fi
+    if [ "$GSETTINGS" ]; then glib-compile-schemas /usr/share/glib-2.0/schemas; fi
+    if [ "$FONTS" ]; then fc-cache -f -s; mkfontscale /usr/share/fonts/TTF; mkfontdir /usr/share/fonts/TTF; fi
+}
+
+fn_pkg_install() {
+    for ONE in $ARGI; do
+        if [ -f $ONE ]; then
+            ARG="$ONE"
+            fn_pkg_install_local
+            exit 0
+        fi
+    done
+    fn_check_pkgmatch_exists $ARGI
+    for ONE in $ARGI; do
+        ARG="$ONE"
+        if [ -d $DBPATH/installed/$ARG ]; then
+            echo "$ARG is already installed" && exit 1
+        fi
+        PKGMATCH="$(fn_get_pkgmatch $ARG)"
+        if [ -f $CACHEDIR/$(basename $PKGMATCH) ]; then
+            ARG="$(basename $PKGMATCH)"
+            cd $CACHEDIR && fn_pkg_install_local && cd $OLDPWD
+        else
+            fn_pkg_download
+            if [ -f $CACHEDIR/"$(basename $PKGMATCH)" ]; then
+                ARG="$(basename $PKGMATCH)"
+                cd $CACHEDIR && fn_pkg_install_local && cd $OLDPWD
+            fi
+        fi
+    done  
+    
+}
+
+fn_pkg_remove() {
+    for i in $ARG; do
+		if [ -d $DBPATH/installed/$i ]; then
+			. $DBPATH/installed/$i/pkginfo
+			echo -n "Removing $i"
+			cat $DBPATH/installed/$i/files.list | while read file; do 
+				rm -r "$file"
+			done
+			rm -r $DBPATH/installed/$i
+            echo
+		else
+			echo "$ARG is not installed"
+		fi
+	done
+}
+
+fn_pkg_clean_cache() {
+	rm $CACHEDIR/* 2>/dev/null
+}	
+
+fn_pkg_check() {
+    cd $DBPATH/installed/
+    for i in *; do
+        . $DBPATH/installed/$i/pkginfo
+        PKGMATCH="$(grep /$pkgdesc $DBPATH/packages.list | head -1)"
+        if [[ "$PKGMATCH" == "" ]]; then 
+            PKGMATCH2="$(grep /${i}-[0-9] $DBPATH/packages.list | head -1)"
+            PKGFILE2="$(basename $PKGMATCH2)"
+            LONGNAME2="$(echo $PKGFILE2 | sed 's/-[^-]*$//'| sed 's/-[^-]*$//')"
+            NVER="$(echo ${LONGNAME2##*-})"
+            echo "$i $pkgver > $NVER"
+        fi
+    done
+}
+
+fn_pkg_show_help() {
+    echo "Usage: $(basename $0) <command> [arguments]
+
+where <command> is one of:
+
+    up - Update repository database
+    ug - Force update
+    sr - Search packages
+    dl - Download package(s)
+    xp - Extract package (one filename)
+    xa - Extract all the packages from current directory
+    it - Install package(s) (local or from a repository)
+    rm - Uninstall package(s)
+    cc - Remove all files from the cache directory
+
+Author: simargl <https://github.com/simargl>
+License: GPL v3"
+}
+
+# Arguments
+case "$1" in
+	up)
+		fn_repo_update 			    ;;
+	ug)
+		fn_repo_upgrade 			;;    
+    sr)
+		ARG="$2"
+		fn_pkg_search 			    ;;
+	dl)
+		shift 1
+        ARGD="$@"
+		fn_pkg_download_all 		;;
+	xp)
+		ARG="$2"
+		fn_pkg_extract       		;;
+	xa)
+		fn_pkg_extract_all 		    ;;
+	it)
+		shift 1
+        ARGI="$@"
+        fn_pkg_install              ;;
+	rm)
+        shift 1
+		ARG="$@"
+        fn_pkg_remove               ;;
+	la)
+        fn_pkg_list_available       ;;	
+	li)
+        fn_pkg_list_installed       ;;
+	cc)
+        fn_pkg_clean_cache          ;;
+    check)
+        fn_pkg_check                ;;
+    *)
+		fn_pkg_show_help   		    ;;
+esac
