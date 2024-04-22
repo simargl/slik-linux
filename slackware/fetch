@@ -8,7 +8,8 @@ ARCH="x86_64"
 DBPATH="/var/lib/slackware"
 CACHEDIR="/var/cache/slackware"
 REPOSITORY=('https://mirror.netcologne.de/slackware/slackware64-current/patches'
-            'https://mirror.netcologne.de/slackware/slackware64-current/slackware64')
+            'https://mirror.netcologne.de/slackware/slackware64-current/slackware64'
+            'https://github.com/simargl/slik-linux/releases/download/slackware-current')
    
 # root check      
 if [[ $EUID -ne 0 ]]; then echo "This script must be run as root" && exit 1; fi
