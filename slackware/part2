@@ -164,3 +164,4 @@ hwdata
 libwacom
 python-packaging
 json-glib
+startup-notification
