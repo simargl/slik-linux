@@ -42,7 +42,7 @@ fn_build_and_compress() {
     rm -r $STARTDIR/root.x86_64/usr/man
     rm -r $STARTDIR/root.x86_64/etc/asound.conf
     find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs rm
-    find $STARTDIR/root.x86_64/usr/lib64 -maxdepth 2 -name *.a -not -name libc_nonshared.a -not -name libpthread.a -not -name librt.a | xargs rm
+    find $STARTDIR/root.x86_64/usr/lib64 -maxdepth 2 -name *.a -not -name libc_nonshared.a -not -name libpthread.a -not -name librt.a -not -name libdl.a -not -name libm.a | xargs rm
     # wm settings
     sed -i 's/bloe/MerleyKay/g' $STARTDIR/root.x86_64/usr/share/fluxbox/init
     sed -i 's/(urxvt) {urxvt}/(console) {system-terminal-emulator}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
