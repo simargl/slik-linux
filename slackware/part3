@@ -35,10 +35,8 @@ libvorbis
 libvpx
 lm_sensors
 lua
-luajit
 meson
 mpg123
-mpv
 ninja
 ocl-icd
 openal-soft
