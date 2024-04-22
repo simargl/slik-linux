@@ -3,8 +3,8 @@
 # Author: simargl <https://github.com/simargl>
 # License: GPL v3
 
-STARTDIR="$HOME"
-OUTPUTDIR="$HOME/output"
+STARTDIR="/tmp"
+OUTPUTDIR="/tmp/output"
 ROOTFS=""
 
 fn_download_and_extract() {
