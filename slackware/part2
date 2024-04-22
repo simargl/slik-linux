@@ -40,7 +40,6 @@ guile
 harfbuzz
 hicolor-icon-theme
 icu4c
-intel-vaapi-driver
 intltool
 kernel-headers
 lcms2
@@ -103,6 +102,7 @@ libxcvt
 libxkbcommon
 libxkbfile
 libxshmfence
+llvm
 lz4
 lzlib
 m4
@@ -146,7 +146,6 @@ xcb-util-renderutil
 xcb-util-wm
 xdg-utils
 xf86-input-evdev
-xf86-video-intel
 xf86-video-vesa
 xinit
 xkbcomp
@@ -161,3 +160,6 @@ xprop
 xrandr
 xset
 xterm
+libinput
+hwdata
+libwacom

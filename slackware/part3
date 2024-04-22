@@ -1,4 +1,3 @@
-MPlayer
 SDL2
 SDL2_image
 a52dec
@@ -10,7 +9,6 @@ esound
 ffmpeg
 flac
 freeglut
-gtk+2
 jansson
 lame
 libXpresent

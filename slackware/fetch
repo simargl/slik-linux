@@ -5,8 +5,8 @@
 
 # Variables
 ARCH="x86_64"
-DBPATH="/var/lib/slack"
-CACHEDIR="/var/cache/slack"
+DBPATH="/var/lib/slackware"
+CACHEDIR="/var/cache/slackware"
 REPOSITORY=('https://mirror.netcologne.de/slackware/slackware64-current/patches'
             'https://mirror.netcologne.de/slackware/slackware64-current/slackware64')
    
@@ -15,26 +15,22 @@ if [[ $EUID -ne 0 ]]; then echo "This script must be run as root" && exit 1; fi
 
 # download file with wget ($1=filename; $2=target directory; $3=comment)
 fn_download_file() {
-    echo $3
+    echo Downloading $3
     wget -q -nv --no-check-certificate $1 -P $2
 }
 
 fn_repo_update() {
+    [ -f $DBPATH/packages.list ] && rm $DBPATH/packages.list
     if [ ! -f $DBPATH/packages.list ]; then
         echo -e "Synchronizing package databases..."
         for ((i=0; i<${#REPOSITORY[@]}; ++i)); do
-            fn_download_file ${REPOSITORY[i]}/CHECKSUMS.md5 $DBPATH ${REPOSITORY[i]} "$(basename ${REPOSITORY[i]})"
+            fn_download_file ${REPOSITORY[i]}/CHECKSUMS.md5 $DBPATH ${REPOSITORY[i]}/CHECKSUMS.md5
             cd $DBPATH || exit
             grep -E '\.tgz$|\.txz$' CHECKSUMS.md5 | cut -c 36- | sed "s|^|${REPOSITORY[i]}|g" | sort >> packages.list
             rm CHECKSUMS.md5
         done
         echo "Repositories: ""${#REPOSITORY[@]}""  Packages: ""$(grep -c ^ packages.list)"
     fi
-}
-
-fn_repo_upgrade() {
-    [ -f $DBPATH/packages.list ] && rm $DBPATH/packages.list
-    fn_repo_update
 }
 
 fn_pkg_search() {
@@ -256,7 +252,6 @@ fn_pkg_show_help() {
 where <command> is one of:
 
     up - Update repository database
-    ug - Force update
     sr - Search packages
     dl - Download package(s)
     xp - Extract package (one filename)
@@ -273,8 +268,6 @@ License: GPL v3"
 case "$1" in
 	up)
 		fn_repo_update 			    ;;
-	ug)
-		fn_repo_upgrade 			;;    
     sr)
 		ARG="$2"
 		fn_pkg_search 			    ;;
