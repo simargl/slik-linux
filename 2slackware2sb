@@ -8,15 +8,15 @@ OUTPUTDIR="$HOME/output"
 ROOTFS=""
 
 fn_download_and_extract() {
-    sudo install -Dm755 slackware/fetch /usr/bin/fetch
-    sudo cp slackware/{part1,part2,part3} $STARTDIR
+    install -Dm755 slackware/fetch /usr/bin/fetch
+    cp slackware/{part1,part2,part3} $STARTDIR
     cd $STARTDIR
-    sudo fetch ug; sudo fetch cc; sudo fetch dl $(cat part1 | tr '\n' ' ')
-    if [ -d root.x86_64 ]; then sudo rm -r root.x86_64; fi
-    sudo rm *.t?z 2>/dev/null
-    sudo mv /var/cache/slack/* .
-    sudo fetch xa
-    sudo mv install root.x86_64
+    fetch ug; fetch cc; fetch dl $(cat part1 | tr '\n' ' ')
+    if [ -d root.x86_64 ]; then rm -r root.x86_64; fi
+    rm *.t?z 2>/dev/null
+    mv /var/cache/slack/* .
+    fetch xa
+    mv install root.x86_64
 }
 
 fn_build_and_compress() {
