@@ -11,10 +11,10 @@ fn_download_and_extract() {
     install -Dm755 slackware/fetch /usr/bin/fetch
     cp slackware/{part1,part2,part3} $STARTDIR
     cd $STARTDIR
-    fetch ug; fetch cc; fetch dl $(cat part1 | tr '\n' ' ')
+    fetch up; fetch cc; fetch dl $(cat part1 | tr '\n' ' ')
     if [ -d root.x86_64 ]; then rm -r root.x86_64; fi
     rm *.t?z 2>/dev/null
-    mv /var/cache/slack/* .
+    mv /var/cache/slackware/* .
     fetch xa
     mv install root.x86_64
 }
@@ -22,37 +22,39 @@ fn_download_and_extract() {
 fn_build_and_compress() {
     # prepare
     cd $STARTDIR
-    sudo cp /etc/resolv.conf root.x86_64/etc/
-    sudo cp /usr/bin/fetch $STARTDIR/root.x86_64/usr/bin/
-    sudo cp /usr/bin/fetch $STARTDIR/root.x86_64/tmp/
-    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch ug"
-    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part2 | tr '\n' ' ')"
-    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part3 | tr '\n' ' ')"
-    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch cc"
+    cp /etc/resolv.conf root.x86_64/etc/
+    cp /usr/bin/fetch $STARTDIR/root.x86_64/usr/bin/
+    cp /usr/bin/fetch $STARTDIR/root.x86_64/tmp/
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch up"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part2 | tr '\n' ' ')"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part3 | tr '\n' ' ')"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch cc"
     # cache
-    sudo rm -r $STARTDIR/root.x86_64/usr/share/mime/globs
-    sudo rm -r $STARTDIR/root.x86_64/usr/share/icons/hicolor/icon-theme.cache
-    sudo rm -r $STARTDIR/root.x86_64/usr/share/glib-2.0/schemas/gschemas.compiled
-    sudo rm -r $STARTDIR/root.x86_64/usr/lib64/gdk-pixbuf-2.0/2.10.0/loaders.cache
+    rm -r $STARTDIR/root.x86_64/usr/share/mime/globs
+    rm -r $STARTDIR/root.x86_64/usr/share/icons/hicolor/icon-theme.cache
+    rm -r $STARTDIR/root.x86_64/usr/share/glib-2.0/schemas/gschemas.compiled
+    rm -r $STARTDIR/root.x86_64/usr/lib64/gdk-pixbuf-2.0/2.10.0/loaders.cache
     # other
-    sudo rm -r $STARTDIR/root.x86_64/usr/doc
-    sudo rm -r $STARTDIR/root.x86_64/usr/info
-    sudo rm -r $STARTDIR/root.x86_64/usr/share/locale
-    sudo rm -r $STARTDIR/root.x86_64/usr/man
-    sudo rm -r $STARTDIR/root.x86_64/etc/asound.conf
-    find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | sudo xargs rm
+    rm -r $STARTDIR/root.x86_64/usr/doc
+    rm -r $STARTDIR/root.x86_64/usr/info
+    rm -r $STARTDIR/root.x86_64/usr/share/locale
+    rm -r $STARTDIR/root.x86_64/usr/share/gtk-doc
+    rm -r $STARTDIR/root.x86_64/usr/man
+    rm -r $STARTDIR/root.x86_64/etc/asound.conf
+    find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs rm
+    find $STARTDIR/root.x86_64/usr/lib64 -maxdepth 2 -name *.a -not -name libc_nonshared.a -not -name libpthread.a -not -name librt.a | xargs rm
     # wm settings
-    sudo sed -i 's/bloe/MerleyKay/g' $STARTDIR/root.x86_64/usr/share/fluxbox/init
-    sudo sed -i 's/(urxvt) {urxvt}/(console) {system-terminal-emulator}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
-    sudo sed -i 's/(firefox) {firefox}/(web) {system-web-browser}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
-    sudo sed -i 's/(konqueror) {kfmclient openProfile filemanagement}/(files) {system-file-manager}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
-    sudo chroot $STARTDIR/root.x86_64/ /bin/bash -c "echo exec fluxbox>/root/.xinitrc"
+    sed -i 's/bloe/MerleyKay/g' $STARTDIR/root.x86_64/usr/share/fluxbox/init
+    sed -i 's/(urxvt) {urxvt}/(console) {system-terminal-emulator}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
+    sed -i 's/(firefox) {firefox}/(web) {system-web-browser}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
+    sed -i 's/(konqueror) {kfmclient openProfile filemanagement}/(files) {system-file-manager}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "echo exec fluxbox>/root/.xinitrc"
     # remove root warning
-    sudo sed -i 's/geteuid/getppid/' $STARTDIR/root.x86_64/usr/lib64/libmousepad.so.0.0.0
+    sed -i 's/geteuid/getppid/' $STARTDIR/root.x86_64/usr/lib64/libmousepad.so.0.0.0
     # compress
-    if [ ! -d $OUTPUTDIR ]; then sudo mkdir -p $OUTPUTDIR; fi
-    if [ -f $OUTPUTDIR/fs-slackware.sb ]; then sudo rm $OUTPUTDIR/fs-slackware.sb; fi
-    sudo mksquashfs root.x86_64/ $OUTPUTDIR/fs-slackware.sb -comp gzip -b 1024k
+    if [ ! -d $OUTPUTDIR ]; then mkdir -p $OUTPUTDIR; fi
+    if [ -f $OUTPUTDIR/fs-slackware.sb ]; then rm $OUTPUTDIR/fs-slackware.sb; fi
+    mksquashfs root.x86_64/ $OUTPUTDIR/fs-slackware.sb -comp gzip -b 1024k
 }
 
 fn_download_and_extract
