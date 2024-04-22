@@ -30,6 +30,7 @@ fn_build_and_compress() {
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part3 | tr '\n' ' ')"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part4 | tr '\n' ' ')"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch cc"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "update-ca-certificates -f"
     # cache
     rm -r $STARTDIR/root.x86_64/usr/share/mime/globs
     rm -r $STARTDIR/root.x86_64/usr/share/icons/hicolor/icon-theme.cache
