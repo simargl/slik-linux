@@ -50,8 +50,6 @@ fn_build_and_compress() {
     sed -i 's/(firefox) {firefox}/(web) {system-web-browser}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
     sed -i 's/(konqueror) {kfmclient openProfile filemanagement}/(files) {system-file-manager}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "echo exec fluxbox>/root/.xinitrc"
-    # remove root warning
-    sed -i 's/geteuid/getppid/' $STARTDIR/root.x86_64/usr/lib64/libmousepad.so.0.0.0
     # compress
     if [ ! -d $OUTPUTDIR ]; then mkdir -p $OUTPUTDIR; fi
     if [ -f $OUTPUTDIR/fs-slackware.sb ]; then rm $OUTPUTDIR/fs-slackware.sb; fi
