@@ -52,3 +52,9 @@ tevent
 v4l-utils
 vid.stab
 vulkan-sdk
+atkmm
+cairomm
+glibmm
+gtkmm3
+libsigc++
+pangomm
