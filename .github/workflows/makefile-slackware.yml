@@ -21,4 +21,4 @@ jobs:
       uses: actions/upload-artifact@v4
       with:
         name: fs-slackware.sb
-        path: /home/runner/output/fs-slackware.sb
+        path: /tmp/output/fs-slackware.sb
