@@ -163,3 +163,4 @@ libinput
 hwdata
 libwacom
 python-packaging
+json-glib
