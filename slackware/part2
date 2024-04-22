@@ -31,7 +31,6 @@ gettext-tools
 git
 glew
 glu
-gnutls
 gperf
 graphite2
 gtk+3
