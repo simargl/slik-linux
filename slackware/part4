@@ -5,6 +5,7 @@ fmt9
 gammastep
 geany
 girara
+grim
 gtk-layer-shell
 jsoncpp
 labwc
@@ -12,11 +13,13 @@ libdisplay-info
 libliftoff
 libslirp
 luajit
+mako-notifier
 mpv
 scdoc
 seatd
 spdlog
 swaybg
+swayimg
 transmission
 waybar
 wlroots
