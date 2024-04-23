@@ -165,3 +165,11 @@ libwacom
 python-packaging
 json-glib
 startup-notification
+xcb-util-errors
+fmt
+gobject-introspection
+libnl3
+json-c
+lzip
+pygobject3
+libdbusmenu
