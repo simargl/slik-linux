@@ -8,8 +8,8 @@ OUTPUTDIR="/tmp/output"
 ROOTFS=""
 
 fn_download_and_extract() {
-    install -Dm755 slackware/fetch /usr/bin/fetch
-    cp slackware/{part1,part2,part3,part4} $STARTDIR
+    install -Dm755 scripts/test/slackware/fetch /usr/bin/fetch
+    cp scripts/test/slackware/{part1,part2,part3} $STARTDIR
     cd $STARTDIR
     fetch up; fetch cc; fetch dl $(cat part1 | tr '\n' ' ')
     if [ -d root.x86_64 ]; then rm -r root.x86_64; fi
@@ -28,7 +28,6 @@ fn_build_and_compress() {
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch up"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part2 | tr '\n' ' ')"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part3 | tr '\n' ' ')"
-    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part4 | tr '\n' ' ')"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch cc"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "update-ca-certificates -f"
     # cache
@@ -45,7 +44,8 @@ fn_build_and_compress() {
     rm -r $STARTDIR/root.x86_64/etc/asound.conf
     rm -r $STARTDIR/root.x86_64/tmp/*
     find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs rm
-    find $STARTDIR/root.x86_64/usr/lib64 -maxdepth 2 -name *.a -not -name libc_nonshared.a -not -name libpthread.a -not -name librt.a -not -name libdl.a -not -name libm.a | xargs rm
+    find $STARTDIR/root.x86_64/usr/lib64 -maxdepth 2 -name *.a -not -name libc_nonshared.a -not -name libpthread.a -not -name librt.a \
+    -not -name libdl.a -not -name libm.a -not -name libc.a | xargs rm
     # wm settings
     sed -i 's/bloe/MerleyKay/g' $STARTDIR/root.x86_64/usr/share/fluxbox/init
     sed -i 's/(urxvt) {urxvt}/(console) {system-terminal-emulator}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
