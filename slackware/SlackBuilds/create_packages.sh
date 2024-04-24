@@ -58,6 +58,6 @@ fn_create_nwg_packages() {
     done
 }
 
-#fn_create_slik_packages
-#fn_create_sbo_packages
-#fn_create_nwg_packages
+fn_create_slik_packages
+fn_create_sbo_packages
+fn_create_nwg_packages
