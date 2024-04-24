@@ -1,0 +1,12 @@
+swayimg (A lightweight image viewer for Wayland display servers)
+
+Swayimg is a lightweight image viewer for Wayland display servers.
+
+In a Sway compatible mode, the viewer creates an overlay above the
+currently active window, which gives the illusion that you are opening
+the image directly in a terminal window.
+
+https://github.com/artemsen/swayimg
+
+Slackbuild script written by simargl <https://github.com/simargl>
+
