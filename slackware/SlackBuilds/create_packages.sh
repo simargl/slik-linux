@@ -5,12 +5,18 @@
 
 
 fn_create_slik_packages() {
+    if [ ! -d /tmp/slik/ ]; then mkdir /tmp/slik/; fi
     for i in $(ls --hide=create_packages.sh); do
+        cp -a $i /tmp/slik/
+    done
+    cd /tmp/slik/
+    for i in $(ls); do
         cd $i; source $PWD/$i.info
         if [ ! -f "$(basename $DOWNLOAD)" ]; then
             wget $DOWNLOAD
         fi
-        sh $i.SlackBuild && cd -
+        sh $i.SlackBuild
+        cd -
     done
 }
 
@@ -37,7 +43,17 @@ for SLACKBUILD in \
         if [ ! -f "$(basename $DOWNLOAD)" ]; then
             wget $DOWNLOAD
         fi
-        sh $i.SlackBuild && cd -
+        if [ -f mpv.SlackBuild ]; then 
+            sed 's/manpage-build=enabled/manpage-build=disabled/g' -i mpv.SlackBuild
+            sed 's/html-build=enabled/html-build=disabled/g' -i mpv.SlackBuild
+        fi
+        if [ -f gtk-layer-shell.SlackBuild ]; then 
+            sed 's/docs=true/docs=false/g' -i gtk-layer-shell.SlackBuild
+            sed 's|cp -a  $PKG/usr/share/gtk-doc|#cp -a  $PKG/usr/share/gtk-doc|g' -i gtk-layer-shell.SlackBuild
+            sed 's|rm -r $PKG/usr/share/gtk-doc/|#rm -r $PKG/usr/share/gtk-doc/|g' -i gtk-layer-shell.SlackBuild
+        fi
+        sh $i.SlackBuild
+        cd -
     fi
 done
 }
@@ -59,5 +75,5 @@ fn_create_nwg_packages() {
 }
 
 fn_create_slik_packages
-fn_create_sbo_packages
-fn_create_nwg_packages
+#fn_create_sbo_packages
+#fn_create_nwg_packages
