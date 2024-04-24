@@ -12,7 +12,7 @@ libdisplay-info
 libliftoff
 libslirp
 luajit
-mako-notifier
+mako
 mpv
 scdoc
 seatd
