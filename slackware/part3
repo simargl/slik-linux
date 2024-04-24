@@ -3,12 +3,16 @@ SDL2_image
 a52dec
 aalib
 aom
+atkmm
 audiofile
+cairomm
 dav1d
 esound
 ffmpeg
 flac
 freeglut
+glibmm
+gtkmm3
 jansson
 lame
 libXpresent
@@ -25,6 +29,7 @@ libmad
 libmng
 libogg
 libplacebo
+libsigc++
 libsndfile
 libssh
 libtheora
@@ -42,6 +47,7 @@ ocl-icd
 openal-soft
 opus
 orc
+pangomm
 pulseaudio
 samba
 sdl
@@ -52,9 +58,3 @@ tevent
 v4l-utils
 vid.stab
 vulkan-sdk
-atkmm
-cairomm
-glibmm
-gtkmm3
-libsigc++
-pangomm
