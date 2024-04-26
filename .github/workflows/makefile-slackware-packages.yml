@@ -18,9 +18,10 @@ jobs:
       run: sudo sh 2slackware2sb
 
     - name: Compile packages
-      run: sudo cp -a slackware/create_packages.sh /tmp/root.x86_64/
-      run: sudo cp -a slackware/SlackBuilds /tmp/root.x86_64/
-      run: sudo chroot /tmp/root.x86_64/ /bin/bash -c "sh create_packages.sh"
+      run: |
+        sudo cp -a slackware/create_packages.sh /tmp/root.x86_64/
+        sudo cp -a slackware/SlackBuilds /tmp/root.x86_64/
+        sudo chroot /tmp/root.x86_64/ /bin/bash -c "sh create_packages.sh"
 
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
