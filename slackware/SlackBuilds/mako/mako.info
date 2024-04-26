@@ -1,7 +1,0 @@
-PRGNAM="mako"
-VERSION="1.8.0"
-HOMEPAGE="https://github.com/emersion/mako"
-DOWNLOAD="https://github.com/emersion/mako/releases/download/v1.8.0/mako-1.8.0.tar.gz"
-MD5SUM="e8ac766b20a32169c84ba3d0a7dccf55"
-MAINTAINER="simargl <https://github.com/simargl>"
-EMAIL=""
