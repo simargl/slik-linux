@@ -19,7 +19,7 @@ fn_download_and_extract() {
     mv install root.x86_64
 }
 
-fn_build_and_compress() {
+fn_build_rootfs() {
     # prepare
     cd $STARTDIR
     cp /etc/resolv.conf root.x86_64/etc/
@@ -53,11 +53,15 @@ fn_build_and_compress() {
     sed -i 's/(firefox) {firefox}/(web) {system-web-browser}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
     sed -i 's/(konqueror) {kfmclient openProfile filemanagement}/(files) {system-file-manager}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "echo exec fluxbox>/root/.xinitrc"
-    # compress
+}
+
+fn_compress_rootfs() {
+    cd $STARTDIR
     if [ ! -d $OUTPUTDIR ]; then mkdir -p $OUTPUTDIR; fi
     if [ -f $OUTPUTDIR/fs-slackware.sb ]; then rm $OUTPUTDIR/fs-slackware.sb; fi
     mksquashfs root.x86_64/ $OUTPUTDIR/fs-slackware.sb -comp gzip -b 1024k
 }
 
 fn_download_and_extract
-fn_build_and_compress
+fn_build_rootfs
+fn_compress_rootfs
