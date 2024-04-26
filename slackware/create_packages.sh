@@ -3,8 +3,6 @@
 # Author: simargl <https://github.com/simargl>
 # License: GPL v3
 
-set -x
-
 fn_create_sbo_packages() {
 cd /tmp
 for SLACKBUILD in \
