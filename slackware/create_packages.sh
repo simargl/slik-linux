@@ -3,6 +3,8 @@
 # Author: simargl <https://github.com/simargl>
 # License: GPL v3
 
+set -x
+
 fn_create_sbo_packages() {
 cd /tmp
 for SLACKBUILD in \
@@ -19,7 +21,7 @@ for SLACKBUILD in \
     https://slackbuilds.org/slackbuilds/15.0/libraries/spdlog.tar.gz \
     https://slackbuilds.org/slackbuilds/15.0/network/transmission.tar.gz \
     https://slackbuilds.org/slackbuilds/15.0/office/zathura.tar.gz; do \
-    if [ ! -f "$(basename $slackbuild)" ]; then
+    if [ ! -f "$(basename $SLACKBUILD)" ]; then
         wget $SLACKBUILD
         tar -xf "$(basename $SLACKBUILD)"
         i="$(basename $SLACKBUILD | sed s'/.tar.gz//'g)"
