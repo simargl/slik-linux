@@ -22,8 +22,8 @@ jobs:
         sudo mount -t proc proc /tmp/root.x86_64/proc
         sudo mount -t sysfs sys /tmp/root.x86_64/sys
         sudo mount -o bind /dev /tmp/root.x86_64/dev
-        sudo cp -a slackware/create_packages.sh /tmp/root.x86_64/
-        sudo cp -a slackware/SlackBuilds /tmp/root.x86_64/
+        sudo cp -a slackware/repo/create_packages.sh /tmp/root.x86_64/
+        sudo cp -a slackware/repo/SlackBuilds /tmp/root.x86_64/
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "sh create_packages.sh"
         sudo umount /tmp/root.x86_64/{proc,sys,dev}
     - name: Archive artifacts
