@@ -91,6 +91,11 @@ cd build
     --mandir=/usr/man \
     --prefix=/usr \
     --sysconfdir=/etc \
+    --auto-features=disabled \
+    --wrap-mode=nodownload \
+    -Dexperimental=false \
+    -Dcava=disabled \
+    -Dtests=disabled \
     -Dstrip=true \
 
   "${NINJA:=ninja}"
