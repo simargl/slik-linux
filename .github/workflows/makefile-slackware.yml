@@ -14,7 +14,7 @@ jobs:
     - name: Install dependencies
       run: sudo apt-get update; sudo ln -sf /bin/bash /bin/sh
 
-    - name: Compile
+    - name: Create squashfs
       run: sudo sh 2slackware2sb
 
     - name: Archive artifacts
