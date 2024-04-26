@@ -136,7 +136,7 @@ fn_pkg_extract_all() {
         [[ -e $i ]] || break
         ARG=$i
         echo "Installing $ARG --target-root=./install"
-		[ ! -d install ] && mkdir install
+        [ ! -d install ] && mkdir install
         tar -xf $ARG -C install
         if [ -f "install/install/doinst.sh" ]; then cd install && sh ./install/doinst.sh 2>/dev/null; cd $OLDPWD || exit; fi
         fn_write_metadata $ARG install
@@ -203,22 +203,22 @@ fn_pkg_install() {
 
 fn_pkg_remove() {
     for i in $ARG; do
-		if [ -d $DBPATH/installed/$i ]; then
-			. $DBPATH/installed/$i/pkginfo
-			echo -n "Removing $i"
-			cat $DBPATH/installed/$i/files | while read file; do 
-				if [ -f "$file" ]; then rm "$file"; fi
-			done
-			rm -r $DBPATH/installed/$i
+        if [ -d $DBPATH/installed/$i ]; then
+            . $DBPATH/installed/$i/pkginfo
+            echo -n "Removing $i"
+            cat $DBPATH/installed/$i/files | while read file; do 
+                if [ -f "$file" ]; then rm "$file"; fi
+            done
+            rm -r $DBPATH/installed/$i
             echo
-		else
-			echo "$ARG is not installed"
-		fi
-	done
+        else
+            echo "$ARG is not installed"
+        fi
+    done
 }
 
 fn_pkg_clean_cache() {
-	rm $CACHEDIR/* 2>/dev/null
+    rm $CACHEDIR/* 2>/dev/null
 }
 
 fn_pkg_show_help() {
@@ -241,34 +241,34 @@ License: GPL v3"
 
 # Arguments
 case "$1" in
-	up)
-		fn_repo_update 			    ;;
+    up)
+        fn_repo_update                 ;;
     sr)
-		ARG="$2"
-		fn_pkg_search 			    ;;
-	dl)
-		shift 1
+        ARG="$2"
+        fn_pkg_search                 ;;
+    dl)
+        shift 1
         ARGD="$@"
-		fn_pkg_download_all 		;;
-	xp)
-		ARG="$2"
-		fn_pkg_extract       		;;
-	xa)
-		fn_pkg_extract_all 		    ;;
-	it)
-		shift 1
+        fn_pkg_download_all           ;;
+    xp)
+        ARG="$2"
+        fn_pkg_extract               ;;
+    xa)
+        fn_pkg_extract_all           ;;
+    it)
+        shift 1
         ARGI="$@"
         fn_pkg_install              ;;
-	rm)
+    rm)
         shift 1
-		ARG="$@"
+        ARG="$@"
         fn_pkg_remove               ;;
-	la)
-        fn_pkg_list_available       ;;	
-	li)
+    la)
+        fn_pkg_list_available       ;;    
+    li)
         fn_pkg_list_installed       ;;
-	cc)
+    cc)
         fn_pkg_clean_cache          ;;
     *)
-		fn_pkg_show_help   		    ;;
+        fn_pkg_show_help               ;;
 esac
