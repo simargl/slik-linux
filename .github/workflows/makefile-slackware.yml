@@ -1,4 +1,4 @@
-name: Makefile CI fs-slackware.sb
+name: CI fs-slackware.sb
 
 on:
   workflow_dispatch: 
