@@ -1,4 +1,4 @@
-name: Makefile CI slackware-packages
+name: CI slackware-packages
 
 on:
   workflow_dispatch: 
