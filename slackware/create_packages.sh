@@ -34,6 +34,7 @@ fn_create_sbo_packages() {
         https://slackbuilds.org/slackbuilds/15.0/multimedia/mpv.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/libraries/spdlog.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/network/transmission.tar.gz \
+        https://slackbuilds.org/slackbuilds/15.0/network/yt-dlp.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/office/zathura.tar.gz; do \
         if [ ! -f "$(basename $SLACKBUILD)" ]; then
             wget $SLACKBUILD
