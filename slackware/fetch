@@ -242,33 +242,33 @@ License: GPL v3"
 # Arguments
 case "$1" in
     up)
-        fn_repo_update                 ;;
+        fn_repo_update                  ;;
     sr)
         ARG="$2"
-        fn_pkg_search                 ;;
+        fn_pkg_search                   ;;
     dl)
         shift 1
         ARGD="$@"
-        fn_pkg_download_all           ;;
+        fn_pkg_download_all             ;;
     xp)
         ARG="$2"
-        fn_pkg_extract               ;;
+        fn_pkg_extract                  ;;
     xa)
-        fn_pkg_extract_all           ;;
+        fn_pkg_extract_all              ;;
     it)
         shift 1
         ARGI="$@"
-        fn_pkg_install              ;;
+        fn_pkg_install                  ;;
     rm)
         shift 1
         ARG="$@"
-        fn_pkg_remove               ;;
+        fn_pkg_remove                   ;;
     la)
-        fn_pkg_list_available       ;;    
+        fn_pkg_list_available           ;;    
     li)
-        fn_pkg_list_installed       ;;
+        fn_pkg_list_installed           ;;
     cc)
-        fn_pkg_clean_cache          ;;
+        fn_pkg_clean_cache              ;;
     *)
-        fn_pkg_show_help               ;;
+        fn_pkg_show_help                ;;
 esac
