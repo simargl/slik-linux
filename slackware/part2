@@ -136,7 +136,14 @@ pixman
 pkg-config
 poppler
 pygobject3
+python-build
+python-hatchling
+python-installer
 python-packaging
+python-pathspec
+python-pluggy
+python-pyproject-hooks
+python-trove-classifiers
 python3
 rsync
 setxkbmap
