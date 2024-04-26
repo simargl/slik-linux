@@ -41,10 +41,6 @@ fn_pkg_search() {
                 longnameR="$(echo $basenameR | sed 's/-[^-]*$//'| sed 's/-[^-]*$//')"
                 pkgnameR="$(echo $longnameR | sed 's/-[^-]*$//')"
                 pkgverR="$(echo ${longnameR##*-})"
-                if [ -d $DBPATH/installed/$pkgnameR ]; then 
-                    . $DBPATH/installed/$pkgnameR/pkginfo
-                    if [ "$pkgverR" == "$pkgver" ]; then I="i"; else I="o"; fi
-                fi
                 I="Not installed"
                 if [ -d $DBPATH/installed/$pkgnameR ]; then 
                     . $DBPATH/installed/$pkgnameR/pkginfo
