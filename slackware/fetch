@@ -4,29 +4,33 @@
 # License: GPL v3
 
 # Variables
+# Define colors
+GREEN='\033[0;32m'
+YELLOW='\033[0;33m'
+RED='\033[0;31m'
+CYAN='\033[0;36m'
+RESET='\033[0m'
 ARCH="x86_64"
 DBPATH="/var/lib/slackware"
 CACHEDIR="/var/cache/slackware"
 REPOSITORY=('https://mirror.netcologne.de/slackware/slackware64-current/patches'
             'https://mirror.netcologne.de/slackware/slackware64-current/slackware64'
             'https://github.com/simargl/slik-linux/releases/download/slackware-current')
-   
 # root check      
 if [[ $EUID -ne 0 ]]; then echo "This script must be run as root" && exit 1; fi
 
 # download file with wget ($1=filename; $2=target directory; $3=comment)
 fn_download_file() {
-    printf "\e[1;33m>>> \e[1;36mDownloading \e[1;32m%s\e[0m" "$3"  # Gentoo-like colors for the message
+    printf "${YELLOW}>>> ${CYAN}Downloading ${GREEN}%s${RESET}" "$3"
     wget -q -nv "$1" -P "$2" &
-    pid=$!  # Get the PID of the wget process
-    while kill -0 $pid >/dev/null 2>&1; do  # Loop until wget process is finished
-        echo -n "."
-        sleep 1  # Add a dot every second
+    pid=$!
+    while kill -0 $pid >/dev/null 2>&1; do
+        printf "."
+        sleep 1
     done
-    wait $pid  # Wait for wget process to finish
-    printf "\e[1;33m DONE\e[0m\n"  # Print "DONE" in yellow after download completion
+    wait $pid
+    printf "${YELLOW} DONE${RESET}\n"
 }
-
 
 fn_repo_update() {
     [ -f $DBPATH/packages.list ] && rm $DBPATH/packages.list
@@ -42,18 +46,18 @@ fn_repo_update() {
 
 fn_pkg_search() {
     if [[ $ARG && ${#ARG} -gt 0 ]]; then
-        PKGSEARCH=$(grep $ARG $DBPATH/packages.list)
+        PKGSEARCH=$(grep "$ARG" "$DBPATH/packages.list")
         if [[ "$PKGSEARCH" != "" ]]; then
             while read -r result; do
-                nv=$(basename $result | sed 's/\(.*\)-[^-]*-[^-]*$/\1/')
-                pkgnameR="$(echo $nv | sed 's/-[^-]*$//')"
-                pkgverR="$(echo $nv | sed 's/.*-//')"
+                nv=$(basename "$result" | sed 's/\(.*\)-[^-]*-[^-]*$/\1/')
+                pkgnameR="$(echo "$nv" | sed 's/-[^-]*$//')"
+                pkgverR="$(echo "$nv" | sed 's/.*-//')"
                 I="Not installed"
-                if [ -d $DBPATH/installed/$pkgnameR ]; then 
-                    . $DBPATH/installed/$pkgnameR/pkginfo
+                if [ -d "$DBPATH/installed/$pkgnameR" ]; then 
+                    . "$DBPATH/installed/$pkgnameR/pkginfo"
                     if [ "$pkgverR" == "$pkgver" ]; then I="Installed"; else I="Outdated"; fi
                 fi
-                printf "\e[1;33m%-35s\e[0m\e[1;36m%-30s\e[0m\e[1;35m%s\e[0m\n" "$pkgnameR" "($pkgverR)" "$I"
+                printf "${GREEN}%-35s${RESET}${CYAN}%-30s${RESET}${YELLOW}%s${RESET}\n" "$pkgnameR" "($pkgverR)" "$I"
             done <<< "$PKGSEARCH"
         fi
     fi
@@ -73,8 +77,8 @@ fn_check_pkgmatch_exists() {
         fi
     done
     if [[ ${#MISSING[@]} != 0 ]]; then
-        for i in ${MISSING[*]}; do
-            echo "E: Unable to locate package $i"
+        for i in "${MISSING[@]}"; do
+            printf "${RED}E: Unable to locate package %s${RESET}\n" "$i"
         done
         exit 1
     fi
@@ -82,19 +86,19 @@ fn_check_pkgmatch_exists() {
 
 fn_pkg_download() {
     if [ $ARG ]; then
-        PKGMATCH=$(fn_get_pkgmatch $ARG)
+        PKGMATCH=$(fn_get_pkgmatch "$ARG")
         if [[ "$PKGMATCH" != "" ]]; then
-            if [ ! -f $CACHEDIR/$(basename $PKGMATCH) ]; then
-                fn_download_file $PKGMATCH $CACHEDIR "$(basename $PKGMATCH)"
+            if [ ! -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
+                fn_download_file "$PKGMATCH" "$CACHEDIR" "$(basename "$PKGMATCH")"
             else
-                echo "Using cached $(basename $PKGMATCH)"
+                printf "Using cached ${CYAN}%s${RESET}\n" "$(basename "$PKGMATCH")"
             fi
-            if [ ! -f $CACHEDIR/$(basename $PKGMATCH) ]; then    
-                echo -e "$(basename $PKGMATCH) download failed"
+            if [ ! -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
+                printf "${RED}%s download failed${RESET}\n" "$(basename "$PKGMATCH")"
                 exit 1
             fi
         else
-            echo "E: Unable to locate package $ARG"
+            printf "${RED}E: Unable to locate package %s${RESET}\n" "$ARG"
         fi
     fi
 }
@@ -125,36 +129,48 @@ fn_write_metadata() {
 }
 
 fn_pkg_extract() {
-    if [[ $ARG != "" && -f $ARG ]]; then
-        echo "Extracting $ARG"
-        tar -xf $ARG
+    if [[ "$ARG" != "" && -f "$ARG" ]]; then
+        printf "Extracting ${CYAN}%s${RESET}\n" "$ARG"
+        tar -xf "$ARG"
     else
+        printf "${RED}Extraction failed: File not found or invalid.${RESET}\n"
         exit 1
     fi
 }
 
 fn_pkg_extract_all() {
     for i in *.t?z; do
-        [[ -e $i ]] || break
-        ARG=$i
-        echo "Installing $ARG --target-root=./install"
+        [[ -e "$i" ]] || break
+        ARG="$i"
+        printf "Installing ${CYAN}%s${RESET} --target-root=./install\n" "$ARG"
         [ ! -d install ] && mkdir install
-        tar -xf $ARG -C install
-        if [ -f "install/install/doinst.sh" ]; then cd install && sh ./install/doinst.sh 2>/dev/null; cd $OLDPWD || exit; fi
-        fn_write_metadata $ARG install
-        if [ -d install/install ]; then rm -r install/install; fi
+        tar -xf "$ARG" -C install
+        if [ -f "install/install/doinst.sh" ]; then
+            cd install && sh ./install/doinst.sh 2>/dev/null
+            cd "$OLDPWD" || exit
+        fi
+        fn_write_metadata "$ARG" install
+        if [ -d install/install ]; then
+            rm -r install/install
+        fi
     done
 }
 
 fn_pkg_install_local() {
-    if [[ $ARG != "" && -f $ARG ]]; then
-        echo "Installing $ARG"
-        tar -xf $ARG -C /
-        if [ -f "/install/doinst.sh" ]; then cd / && sh ./install/doinst.sh 2>/dev/null; cd $OLDPWD || exit; fi
-        fn_write_metadata $ARG /
-        if [ -d /install ]; then rm -r /install; fi
+    if [[ "$ARG" != "" && -f "$ARG" ]]; then
+        printf "Installing ${CYAN}%s${RESET}\n" "$ARG"
+        tar -xf "$ARG" -C /
+        if [ -f "/install/doinst.sh" ]; then
+            cd / && sh ./install/doinst.sh 2>/dev/null
+            cd "$OLDPWD" || exit
+        fi
+        fn_write_metadata "$ARG" /
+        if [ -d /install ]; then
+            rm -r /install
+        fi
         fn_pkg_post_actions
     else
+        printf "${RED}Installation failed: File not found or invalid.${RESET}\n"
         exit 1
     fi
 }
@@ -176,45 +192,46 @@ fn_pkg_post_actions_run() {
 
 fn_pkg_install() {
     for ONE in $ARGI; do
-        if [ -f $ONE ]; then
+        if [ -f "$ONE" ]; then
             ARG="$ONE"
             fn_pkg_install_local
             exit 0
         fi
     done
-    fn_check_pkgmatch_exists $ARGI
+    fn_check_pkgmatch_exists "$ARGI"
     for ONE in $ARGI; do
         ARG="$ONE"
-        if [ -d $DBPATH/installed/$ARG ]; then
-            echo "$ARG is already installed" && exit 1
+        if [ -d "$DBPATH/installed/$ARG" ]; then
+            printf "${RED}%s is already installed${RESET}\n" "$ARG" && exit 1
         fi
-        PKGMATCH="$(fn_get_pkgmatch $ARG)"
-        if [ -f $CACHEDIR/$(basename $PKGMATCH) ]; then
-            ARG="$(basename $PKGMATCH)"
-            cd $CACHEDIR && fn_pkg_install_local && cd $OLDPWD
+        PKGMATCH="$(fn_get_pkgmatch "$ARG")"
+        if [ -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
+            ARG="$(basename "$PKGMATCH")"
+            cd "$CACHEDIR" && fn_pkg_install_local && cd "$OLDPWD"
         else
             fn_pkg_download
-            if [ -f $CACHEDIR/"$(basename $PKGMATCH)" ]; then
-                ARG="$(basename $PKGMATCH)"
-                cd $CACHEDIR && fn_pkg_install_local && cd $OLDPWD
+            if [ -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
+                ARG="$(basename "$PKGMATCH")"
+                cd "$CACHEDIR" && fn_pkg_install_local && cd "$OLDPWD"
             fi
         fi
-    done  
-    
+    done
 }
 
 fn_pkg_remove() {
     for i in $ARGR; do
-        if [ -d $DBPATH/installed/$i ]; then
-            . $DBPATH/installed/$i/pkginfo
-            echo -n "Removing $i"
-            cat $DBPATH/installed/$i/files | while read file; do 
-                if [ -f "$file" ]; then rm "$file"; fi
+        if [ -d "$DBPATH/installed/$i" ]; then
+            . "$DBPATH/installed/$i/pkginfo"
+            printf "Removing ${CYAN}%s${RESET}" "$i"
+            cat "$DBPATH/installed/$i/files" | while read -r file; do 
+                if [ -f "$file" ]; then 
+                    rm "$file"
+                fi
             done
-            rm -r $DBPATH/installed/$i
+            rm -r "$DBPATH/installed/$i"
             echo
         else
-            echo "$ARG is not installed"
+            printf "${RED}%s is not installed${RESET}\n" "$ARGR"
         fi
     done
 }
@@ -224,18 +241,16 @@ fn_pkg_clean_cache() {
 }
 
 fn_pkg_show_help() {
-    echo "Usage: $(basename $0) <command> [arguments]
-
-where <command> is one of:
-    up: Update repository database
-    sr: Search for packages
-    dl: Download package(s)
-    xp: Extract a single package (specify filename)
-    xa: Extract all packages from the current directory
-    it: Install package(s) (local or from a repository)
-    rm: Uninstall package(s)
-    cc: Delete cached packages
-"
+    printf "Usage: %s <command> [arguments]\n\n" "$(basename "$0")"
+    printf "where ${CYAN}<command>${RESET} is one of:\n"
+    printf "    ${GREEN}%-2s${RESET} ${YELLOW}%-42s${RESET} %s\n" "up:" "Update repository database"
+    printf "    ${GREEN}%-2s${RESET} ${YELLOW}%-42s${RESET} %s\n" "sr:" "Search for packages"
+    printf "    ${GREEN}%-2s${RESET} ${YELLOW}%-42s${RESET} %s\n" "dl:" "Download package(s)"
+    printf "    ${GREEN}%-2s${RESET} ${YELLOW}%-42s${RESET} %s\n" "xp:" "Extract a single package (specify filename)"
+    printf "    ${GREEN}%-2s${RESET} ${YELLOW}%-42s${RESET} %s\n" "xa:" "Extract all packages from the current directory"
+    printf "    ${GREEN}%-2s${RESET} ${YELLOW}%-42s${RESET} %s\n" "it:" "Install package(s) (local or from a repository)"
+    printf "    ${GREEN}%-2s${RESET} ${YELLOW}%-42s${RESET} %s\n" "rm:" "Uninstall package(s)"
+    printf "    ${GREEN}%-2s${RESET} ${YELLOW}%-42s${RESET} %s\n\n" "cc:" "Delete cached packages"
 }
 
 # Arguments
