@@ -96,6 +96,7 @@ cd build
     -Dexperimental=false \
     -Dcava=disabled \
     -Dtests=disabled \
+    -Ddbusmenu-gtk=enabled \
     -Dstrip=true \
 
   "${NINJA:=ninja}"
