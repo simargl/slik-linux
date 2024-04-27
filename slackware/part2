@@ -16,6 +16,7 @@ dconf
 dcron
 dejavu-fonts-ttf
 desktop-file-utils
+elfutils
 eudev
 flex
 fluxbox
