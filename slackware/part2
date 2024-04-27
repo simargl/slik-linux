@@ -34,6 +34,7 @@ glew
 glu
 gobject-introspection
 gperf
+graphene
 graphite2
 gtk+3
 gtk4
