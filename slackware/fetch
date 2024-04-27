@@ -36,19 +36,18 @@ fn_pkg_search() {
     if [[ $ARG && ${#ARG} -gt 0 ]]; then
         PKGSEARCH=$(grep $ARG $DBPATH/packages.list)
         if [[ "$PKGSEARCH" != "" ]]; then
-            for P in $PKGSEARCH; do 
-                basenameR="$(basename $P)"
-                longnameR="$(echo $basenameR | sed 's/-[^-]*$//'| sed 's/-[^-]*$//')"
-                pkgnameR="$(echo $longnameR | sed 's/-[^-]*$//')"
-                pkgverR="$(echo ${longnameR##*-})"
+            while read -r result; do
+                nv=$(basename $result | sed 's/\(.*\)-[^-]*-[^-]*$/\1/')
+                pkgnameR="$(echo $nv | sed 's/-[^-]*$//')"
+                pkgverR="$(echo $nv | sed 's/.*-//')"
                 I="Not installed"
                 if [ -d $DBPATH/installed/$pkgnameR ]; then 
                     . $DBPATH/installed/$pkgnameR/pkginfo
                     if [ "$pkgverR" == "$pkgver" ]; then I="Installed"; else I="Outdated"; fi
                 fi
-                printf "%-35s%-25s%s\n" "$pkgnameR" "($pkgverR)" "$I"
+                printf "%-35s%-30s%s\n" "$pkgnameR" "($pkgverR)" "$I"
                 unset I
-            done
+            done <<< "$PKGSEARCH"
         fi
     fi
 }
@@ -102,20 +101,20 @@ fn_pkg_download_all() {
 }
 
 fn_get_metadata() {
-    longname="$(echo $1 | sed 's/-[^-]*$//'| sed 's/-[^-]*$//')"
-    pkgname="$(echo $longname | sed  's/-[^-]*$//')"
-    pkgver="$(echo ${longname##*-})"
+    nv=$(echo $1 | sed 's/\(.*\)-[^-]*-[^-]*$/\1/')
+    pkgname="$(echo $nv | sed 's/-[^-]*$//')"
+    pkgver="$(echo $nv | sed 's/.*-//')"
     pkgrel="$(echo ${1##*-} | sed 's/.t.z//')"
 }
 
 fn_write_metadata() {
-    fn_get_metadata $1 $2
+    fn_get_metadata $1
     mkdir -p $2/$DBPATH/installed/$pkgname
     echo pkgname="$pkgname" > $2/$DBPATH/installed/$pkgname/pkginfo
     echo pkgver="$pkgver" >> $2/$DBPATH/installed/$pkgname/pkginfo
     echo pkgrel="$pkgrel" >> $2/$DBPATH/installed/$pkgname/pkginfo
     # files
-    tar -tvf $1 | awk '!/^d/ {print $NF}' | grep -v "install/" | sed 's/^/\//' > $2/$DBPATH/installed/$pkgname/files
+    tar -tf "$1" | awk '!/^[^d]/ && !/install\// {print "/" $0}' > $2/$DBPATH/installed/$pkgname/files
 }
 
 fn_pkg_extract() {
@@ -198,7 +197,7 @@ fn_pkg_install() {
 }
 
 fn_pkg_remove() {
-    for i in $ARG; do
+    for i in $ARGR; do
         if [ -d $DBPATH/installed/$i ]; then
             . $DBPATH/installed/$i/pkginfo
             echo -n "Removing $i"
@@ -234,34 +233,13 @@ where <command> is one of:
 
 # Arguments
 case "$1" in
-    up)
-        fn_repo_update                  ;;
-    sr)
-        ARG="$2"
-        fn_pkg_search                   ;;
-    dl)
-        shift 1
-        ARGD="$@"
-        fn_pkg_download_all             ;;
-    xp)
-        ARG="$2"
-        fn_pkg_extract                  ;;
-    xa)
-        fn_pkg_extract_all              ;;
-    it)
-        shift 1
-        ARGI="$@"
-        fn_pkg_install                  ;;
-    rm)
-        shift 1
-        ARG="$@"
-        fn_pkg_remove                   ;;
-    la)
-        fn_pkg_list_available           ;;    
-    li)
-        fn_pkg_list_installed           ;;
-    cc)
-        fn_pkg_clean_cache              ;;
-    *)
-        fn_pkg_show_help                ;;
+    up) fn_repo_update ;;
+    sr) ARG="$2"; fn_pkg_search ;;
+    dl) shift; ARGD="$@"; fn_pkg_download_all ;;
+    xp) ARG="$2"; fn_pkg_extract ;;
+    xa) fn_pkg_extract_all ;;
+    it) shift; ARGI="$@"; fn_pkg_install ;;
+    rm) shift; ARGR="$@"; fn_pkg_remove ;;
+    cc) fn_pkg_clean_cache ;;
+    *) fn_pkg_show_help ;;
 esac
