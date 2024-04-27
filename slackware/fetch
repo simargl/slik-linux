@@ -46,7 +46,7 @@ fn_pkg_search() {
                     . $DBPATH/installed/$pkgnameR/pkginfo
                     if [ "$pkgverR" == "$pkgver" ]; then I="Installed"; else I="Outdated"; fi
                 fi
-                echo -e "$pkgnameR""\\033[35G""($pkgverR)""\\033[60G""$I"
+                printf "%-35s%-25s%s\n" "$pkgnameR" "($pkgverR)" "$I"
                 unset I
             done
         fi
@@ -221,18 +221,15 @@ fn_pkg_show_help() {
     echo "Usage: $(basename $0) <command> [arguments]
 
 where <command> is one of:
-
-    up - Update repository database
-    sr - Search packages
-    dl - Download package(s)
-    xp - Extract package (one filename)
-    xa - Extract all the packages from current directory
-    it - Install package(s) (local or from a repository)
-    rm - Uninstall package(s)
-    cc - Remove all files from the cache directory
-
-Author: simargl <https://github.com/simargl>
-License: GPL v3"
+    up: Update repository database
+    sr: Search for packages
+    dl: Download package(s)
+    xp: Extract a single package (specify filename)
+    xa: Extract all packages from the current directory
+    it: Install package(s) (local or from a repository)
+    rm: Uninstall package(s)
+    cc: Delete cached packages
+"
 }
 
 # Arguments
