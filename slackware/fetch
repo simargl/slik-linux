@@ -108,13 +108,13 @@ fn_get_metadata() {
 }
 
 fn_write_metadata() {
-    fn_get_metadata $1
+    fn_get_metadata $1 $2
     mkdir -p $2/$DBPATH/installed/$pkgname
     echo pkgname="$pkgname" > $2/$DBPATH/installed/$pkgname/pkginfo
     echo pkgver="$pkgver" >> $2/$DBPATH/installed/$pkgname/pkginfo
     echo pkgrel="$pkgrel" >> $2/$DBPATH/installed/$pkgname/pkginfo
     # files
-    tar -tf "$1" | awk '!/^[^d]/ && !/install\// {print "/" $0}' > $2/$DBPATH/installed/$pkgname/files
+    tar -tvf $1 | awk '!/^d/ {print $NF}' | grep -v "install/" | sed 's/^/\//' > $2/$DBPATH/installed/$pkgname/files
 }
 
 fn_pkg_extract() {
