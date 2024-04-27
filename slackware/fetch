@@ -57,7 +57,7 @@ fn_pkg_search() {
                     . "$DBPATH/installed/$pkgnameR/pkginfo"
                     if [ "$pkgverR" == "$pkgver" ]; then I="Installed"; else I="Outdated"; fi
                 fi
-                printf "${GREEN}%-35s${RESET}${CYAN}%-30s${RESET}${YELLOW}%s${RESET}\n" "$pkgnameR" "($pkgverR)" "$I"
+                printf "%-35s%-30s%s\n" "$pkgnameR" "($pkgverR)" "$I"
             done <<< "$PKGSEARCH"
         fi
     fi
