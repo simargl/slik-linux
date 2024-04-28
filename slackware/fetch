@@ -221,13 +221,15 @@ fn_pkg_install_local() {
 }
 
 fn_pkg_install() {
+    LOCAL="false"
     for ONE in $ARGI; do
         if [ -f "$ONE" ]; then
+            LOCAL="true"
             ARG="$ONE"
             fn_pkg_install_local
-            exit 0
         fi
     done
+    if [ "$LOCAL" = true ]; then exit 0; fi
     fn_check_pkgmatch_exists "$ARGI"
     for ONE in $ARGI; do
         ARG="$ONE"
