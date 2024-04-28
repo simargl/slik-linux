@@ -15,7 +15,7 @@ jobs:
       run: sudo apt-get update; sudo ln -sf /bin/bash /bin/sh
 
     - name: Create squashfs
-      run: sudo sh slackware/repo/mirror_test.sh
+      run: sudo sh 2slackware2sb
 
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
