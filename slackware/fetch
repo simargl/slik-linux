@@ -3,21 +3,23 @@
 # Author: simargl <https://github.com/simargl>
 # License: GPL v3
 
-# Variables
-# Define colors
+# define colors and variables
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
 CYAN='\033[0;36m'
 RESET='\033[0m'
-ARCH="x86_64"
 DBPATH="/var/lib/slackware"
 CACHEDIR="/var/cache/slackware"
 REPOSITORY=('https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-current/patches'
             'https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-current/slackware64'
             'https://github.com/simargl/slik-linux/releases/download/slackware-current')
-# root check      
-if [[ $EUID -ne 0 ]]; then echo "This script must be run as root" && exit 1; fi
+
+#root check      
+if [[ $EUID -ne 0 ]]; then
+    printf "${RED}This script must be run as root${RESET}\n"
+    exit 1
+fi
 
 # download file with wget ($1=filename; $2=target directory; $3=comment)
 fn_download_file() {
@@ -34,18 +36,18 @@ fn_download_file() {
 
 fn_repo_update() {
     [ -f $DBPATH/packages.list ] && rm $DBPATH/packages.list
-    echo -e "Synchronizing package databases..."
+    printf "Synchronizing package databases...\n"
     for ((i=0; i<${#REPOSITORY[@]}; ++i)); do
         fn_download_file ${REPOSITORY[i]}/CHECKSUMS.md5 $DBPATH ${REPOSITORY[i]}
         cd $DBPATH || exit
         grep -E '\.tgz$|\.txz$' CHECKSUMS.md5 | cut -c 36- | sed "s|^|${REPOSITORY[i]}|g" | sort >> packages.list
         rm CHECKSUMS.md5
     done
-    echo "Repositories: ""${#REPOSITORY[@]}""  Packages: ""$(grep -c ^ packages.list)"
+    printf "Repositories: %d Packages: %d\n" "${#REPOSITORY[@]}" "$(grep -c ^ packages.list)"
 }
 
 fn_pkg_search() {
-    if [[ $ARG && ${#ARG} -gt 0 ]]; then
+    if [[ $ARG ]]; then
         PKGSEARCH=$(grep "$ARG" "$DBPATH/packages.list")
         if [[ "$PKGSEARCH" != "" ]]; then
             while read -r result; do
@@ -53,8 +55,8 @@ fn_pkg_search() {
                 pkgnameR="$(echo "$nv" | sed 's/-[^-]*$//')"
                 pkgverR="$(echo "$nv" | sed 's/.*-//')"
                 I="Not installed"
-                if [ -d "$DBPATH/installed/$pkgnameR" ]; then 
-                    . "$DBPATH/installed/$pkgnameR/pkginfo"
+                if [ -f "$DBPATH/installed/$pkgnameR/pkginfo" ]; then 
+                    source "$DBPATH/installed/$pkgnameR/pkginfo"
                     if [ "$pkgverR" == "$pkgver" ]; then I="Installed"; else I="Outdated ($pkgver)"; fi
                 fi
                 printf "%-32s%-28s%s\n" "$pkgnameR" "($pkgverR)" "$I"
@@ -64,12 +66,12 @@ fn_pkg_search() {
 }
 
 fn_get_pkgmatch() {
-    grep /$1-[0-9] $DBPATH/packages.list | head -1
+    grep "/$1-[0-9]" "$DBPATH/packages.list" | head -1
 }
 
 fn_check_pkgmatch_exists() {
     unset MISSING
-    LIST="$@"
+    LIST=("$@")
     for ONE in $LIST; do  
         PKGMATCH="$(fn_get_pkgmatch $ONE)"
         if [[ $PKGMATCH == "" ]]; then
@@ -111,15 +113,11 @@ fn_pkg_download_all() {
     done
 }
 
-fn_get_metadata() {
+fn_write_metadata() {
     nv=$(echo $1 | sed 's/\(.*\)-[^-]*-[^-]*$/\1/')
     pkgname="$(echo $nv | sed 's/-[^-]*$//')"
     pkgver="$(echo $nv | sed 's/.*-//')"
     pkgrel="$(echo ${1##*-} | sed 's/.t.z//')"
-}
-
-fn_write_metadata() {
-    fn_get_metadata $1 $2
     mkdir -p $2/$DBPATH/installed/$pkgname
     echo pkgname="$pkgname" > $2/$DBPATH/installed/$pkgname/pkginfo
     echo pkgver="$pkgver" >> $2/$DBPATH/installed/$pkgname/pkginfo
@@ -156,38 +154,70 @@ fn_pkg_extract_all() {
     done
 }
 
+fn_pkg_post_actions() {
+    local ICONS
+    local DESKTOP
+    local GSETTINGS
+    local FONTS
+
+    ICONS=$(grep /usr/share/icons/hicolor "$DBPATH/installed/$pkgname/files" || true)
+    DESKTOP=$(grep /usr/share/applications "$DBPATH/installed/$pkgname/files" || true)
+    GSETTINGS=$(grep /usr/share/glib-2.0/schemas "$DBPATH/installed/$pkgname/files" || true)
+    FONTS=$(grep /usr/share/fonts/TTF "$DBPATH/installed/$pkgname/files" || true)
+
+    local file_paths=("$ICONS" "$DESKTOP" "$GSETTINGS" "$FONTS")
+
+    for file_path in "${file_paths[@]}"; do
+        if [ "$file_path" ]; then
+            case "$file_path" in
+                "$ICONS")
+                    printf "Updating icon cache...\n"
+                    gtk-update-icon-cache /usr/share/icons/hicolor
+                    ;;
+                "$DESKTOP")
+                    printf "Updating desktop database...\n"
+                    update-desktop-database
+                    ;;
+                "$GSETTINGS")
+                    printf "Compiling GSettings schemas...\n"
+                    glib-compile-schemas /usr/share/glib-2.0/schemas
+                    ;;
+                "$FONTS")
+                    printf "Updating font cache and directories...\n"
+                    fc-cache -f -s
+                    mkfontscale /usr/share/fonts/TTF
+                    mkfontdir /usr/share/fonts/TTF
+                    ;;
+            esac
+        fi
+    done
+}
+
+fn_run_install_script() {
+    if [ -f "$1" ]; then
+        cd / && sh "$1" 2>/dev/null
+        cd - >/dev/null || exit
+    fi
+}
+
+fn_cleanup_install_directory() {
+    if [ -d /install ]; then
+        rm -r /install
+    fi
+}
+
 fn_pkg_install_local() {
     if [[ "$ARG" != "" && -f "$ARG" ]]; then
         printf "Installing ${CYAN}%s${RESET}\n" "$ARG"
         tar -xf "$ARG" -C /
-        if [ -f "/install/doinst.sh" ]; then
-            cd / && sh ./install/doinst.sh 2>/dev/null
-            cd "$OLDPWD" || exit
-        fi
+        fn_run_install_script "/install/doinst.sh"
         fn_write_metadata "$ARG" /
-        if [ -d /install ]; then
-            rm -r /install
-        fi
+        fn_cleanup_install_directory
         fn_pkg_post_actions
     else
         printf "${RED}Installation failed: File not found or invalid.${RESET}\n"
         exit 1
     fi
-}
-
-fn_pkg_post_actions() {
-    ICONS=$(grep /usr/share/icons/hicolor         $DBPATH/installed/$pkgname/files)
-    DESKTOP=$(grep /usr/share/applications        $DBPATH/installed/$pkgname/files)
-    GSETTINGS=$(grep /usr/share/glib-2.0/schemas  $DBPATH/installed/$pkgname/files)
-    FONTS=$(grep /usr/share/fonts/TTF             $DBPATH/installed/$pkgname/files)
-    fn_pkg_post_actions_run
-}
-
-fn_pkg_post_actions_run() {
-    if [ "$ICONS" ]; then gtk-update-icon-cache /usr/share/icons/hicolor; fi
-    if [ "$DESKTOP" ]; then update-desktop-database; fi
-    if [ "$GSETTINGS" ]; then glib-compile-schemas /usr/share/glib-2.0/schemas; fi
-    if [ "$FONTS" ]; then fc-cache -f -s; mkfontscale /usr/share/fonts/TTF; mkfontdir /usr/share/fonts/TTF; fi
 }
 
 fn_pkg_install() {
@@ -207,12 +237,12 @@ fn_pkg_install() {
         PKGMATCH="$(fn_get_pkgmatch "$ARG")"
         if [ -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
             ARG="$(basename "$PKGMATCH")"
-            cd "$CACHEDIR" && fn_pkg_install_local && cd "$OLDPWD"
+            cd "$CACHEDIR" && fn_pkg_install_local && cd ->/dev/null || exit
         else
             fn_pkg_download
             if [ -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
                 ARG="$(basename "$PKGMATCH")"
-                cd "$CACHEDIR" && fn_pkg_install_local && cd "$OLDPWD"
+                cd "$CACHEDIR" && fn_pkg_install_local && cd ->/dev/null || exit
             fi
         fi
     done
@@ -220,18 +250,17 @@ fn_pkg_install() {
 
 fn_pkg_remove() {
     for i in $ARGR; do
-        if [ -d "$DBPATH/installed/$i" ]; then
-            . "$DBPATH/installed/$i/pkginfo"
-            printf "Removing ${CYAN}%s${RESET}" "$i"
+        if [ -f "$DBPATH/installed/$i/pkginfo" ]; then
+            source "$DBPATH/installed/$i/pkginfo"
+            printf "Removing ${CYAN}%s${RESET}\n" "$i"
             cat "$DBPATH/installed/$i/files" | while read -r file; do 
                 if [ -f "$file" ]; then 
                     rm "$file"
                 fi
             done
             rm -r "$DBPATH/installed/$i"
-            echo
         else
-            printf "${RED}%s is not installed${RESET}\n" "$ARGR"
+            printf "${RED}%s is not installed${RESET}\n" "$i"
         fi
     done
 }
