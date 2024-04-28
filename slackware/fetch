@@ -71,7 +71,7 @@ fn_get_pkgmatch() {
 
 fn_check_pkgmatch_exists() {
     unset MISSING
-    LIST=("$@")
+    LIST="$@"
     for ONE in $LIST; do  
         PKGMATCH="$(fn_get_pkgmatch $ONE)"
         if [[ $PKGMATCH == "" ]]; then
@@ -196,7 +196,7 @@ fn_pkg_post_actions() {
 fn_run_install_script() {
     if [ -f "$1" ]; then
         cd / && sh "$1" 2>/dev/null
-        cd - >/dev/null || exit
+        cd "$OLDPWD"
     fi
 }
 
@@ -237,12 +237,12 @@ fn_pkg_install() {
         PKGMATCH="$(fn_get_pkgmatch "$ARG")"
         if [ -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
             ARG="$(basename "$PKGMATCH")"
-            cd "$CACHEDIR" && fn_pkg_install_local && cd ->/dev/null || exit
+            cd "$CACHEDIR" && fn_pkg_install_local && cd "$OLDPWD"
         else
             fn_pkg_download
             if [ -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
                 ARG="$(basename "$PKGMATCH")"
-                cd "$CACHEDIR" && fn_pkg_install_local && cd ->/dev/null || exit
+                cd "$CACHEDIR" && fn_pkg_install_local && cd "$OLDPWD"
             fi
         fi
     done
