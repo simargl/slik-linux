@@ -258,6 +258,7 @@ fn_pkg_remove() {
                     rm "$file"
                 fi
             done
+            fn_pkg_post_actions
             rm -r "$DBPATH/installed/$i"
         else
             printf "${RED}%s is not installed${RESET}\n" "$i"
