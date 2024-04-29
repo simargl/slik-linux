@@ -3,7 +3,7 @@
 # Author: simargl <https://github.com/simargl>
 # License: GPL v3
 
-# define colors and variables
+# Define colors and variables
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
@@ -15,13 +15,13 @@ REPOSITORY=('https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-current
             'https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-current/slackware64'
             'https://github.com/simargl/slik-linux/releases/download/slackware-current')
 
-#root check      
+# Root check      
 if [[ $EUID -ne 0 ]]; then
-    printf "${RED}This script must be run as root${RESET}\n"
+    printf "${RED}Error: This script must be run as root${RESET}\n"
     exit 1
 fi
 
-# download file with wget ($1=filename; $2=target directory; $3=comment)
+# Download file with wget ($1=filename; $2=target directory; $3=comment)
 fn_download_file() {
     printf "${YELLOW}>>> ${CYAN}Downloading ${GREEN}%s${RESET}" "$3"
     wget -q -nv --no-check-certificate "$1" -P "$2" &
@@ -80,7 +80,7 @@ fn_check_pkgmatch_exists() {
     done
     if [[ ${#MISSING[@]} != 0 ]]; then
         for i in "${MISSING[@]}"; do
-            printf "${RED}E: Unable to locate package %s${RESET}\n" "$i"
+            printf "${RED}Error: Unable to locate package %s${RESET}\n" "$i"
         done
         exit 1
     fi
@@ -100,7 +100,7 @@ fn_pkg_download() {
                 exit 1
             fi
         else
-            printf "${RED}E: Unable to locate package %s${RESET}\n" "$ARG"
+            printf "${RED}Error: Unable to locate package %s${RESET}\n" "$ARG"
         fi
     fi
 }
