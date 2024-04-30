@@ -3,13 +3,16 @@
 # Author: simargl <https://github.com/simargl>
 # License: GPL v3
 
+. ./config
+fn_prepare_output_dir
+
 STARTDIR="/tmp"
-OUTPUTDIR="/tmp/output"
+OUTPUTDIR="$PWD/output/iso/$SYSNAME/modules"
 ROOTFS=""
 
 fn_download_and_extract() {
-    install -Dm755 slackware/fetch /usr/bin/fetch
-    cp slackware/{part1,part2,part3,part4} $STARTDIR
+    install -Dm755 scripts/slackware/fetch /usr/bin/fetch
+    cp scripts/slackware/{part1,part2,part3,part4} $STARTDIR
     cd $STARTDIR
     fetch up; fetch cc; fetch dl $(cat part1 | tr '\n' ' ')
     if [ -d root.x86_64 ]; then rm -r root.x86_64; fi
@@ -58,6 +61,7 @@ fn_build_rootfs() {
     sed -i 's/bloe/MerleyKay/g' $STARTDIR/root.x86_64/usr/share/fluxbox/init
     sed -i 's/(urxvt) {urxvt}/(console) {system-terminal-emulator}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
     sed -i 's/(firefox) {firefox}/(web) {system-web-browser}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
+    sed -i '/\[exec\]   (Run) {fbrun}/i\      [exec\] (files) {system-file-manager}' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
     sed -i 's/(konqueror) {kfmclient openProfile filemanagement}/(files) {system-file-manager}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "echo exec fluxbox>/root/.xinitrc"
 }
