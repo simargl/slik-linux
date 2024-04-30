@@ -1,0 +1,8 @@
+mako (A lightweight notification daemon for Wayland.)
+
+mako implements the FreeDesktop Notifications Specification.
+
+https://github.com/emersion/mako
+
+Slackbuild script written by simargl <https://github.com/simargl>
+
