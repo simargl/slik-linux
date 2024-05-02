@@ -17,6 +17,7 @@ dconf
 dcron
 dejavu-fonts-ttf
 desktop-file-utils
+dialog
 elfutils
 eudev
 flex
@@ -33,6 +34,7 @@ gettext-tools
 git
 glew
 glu
+gnupg2
 gobject-introspection
 gperf
 graphene
@@ -126,6 +128,7 @@ mkfontscale
 mozilla-nss
 mtdev
 nghttp2
+npth
 openjpeg
 openssl-solibs
 pam
@@ -152,6 +155,7 @@ rsync
 setxkbmap
 shadow
 shared-mime-info
+slackpkg
 sqlite
 startup-notification
 sysvinit
