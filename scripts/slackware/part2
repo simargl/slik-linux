@@ -45,6 +45,7 @@ gtksourceview3
 guile
 harfbuzz
 hicolor-icon-theme
+hostname
 hwdata
 icu4c
 intltool
