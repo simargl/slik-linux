@@ -54,6 +54,10 @@ fn_build_rootfs() {
     rm -r $STARTDIR/root.x86_64/usr/bin/{c-index-test,clang*,llvm*,obj2yaml}
     rm -r $STARTDIR/root.x86_64/usr/include/clang*
     rm -r $STARTDIR/root.x86_64/usr/lib64/{libclang*,clang}
+    # usr bin files   
+    rm -r $STARTDIR/root.x86_64/usr/bin/{alsabat,alsaloop,alsoft-config,cd-info,cdda-player,cmake-gui,diagtool,find-all-symbols}
+    rm -r $STARTDIR/root.x86_64/usr/bin/{gif2webp,lit-cpuid,lldb,lldb-argdumper,lldb-dap,lldb-instr,lldb-server,memusagestat}
+    rm -r $STARTDIR/root.x86_64/usr/bin/{modularize,pp-trace,qv4l2,qvidcap,rsync,setpriv,sqlite3_analyzer,vkconfig,vulkanCapsViewer}
     # wm settings
     sed -i 's/bloe/MerleyKay/g' $STARTDIR/root.x86_64/usr/share/fluxbox/init
     sed -i 's/(urxvt) {urxvt}/(console) {system-terminal-emulator}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
