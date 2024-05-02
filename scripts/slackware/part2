@@ -4,6 +4,7 @@ at-spi2-core
 autoconf
 automake
 avahi
+bc
 binutils
 bison
 brotli
