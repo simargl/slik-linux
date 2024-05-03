@@ -23,8 +23,8 @@ jobs:
       with:
         draft: false
         prerelease: false
-        tag_name: "slik-linux-${{ github.event.repository.updated_at}}"
-        release_name: "slik-linux-${{ github.event.repository.updated_at}}"
+        tag_name: "slik-linux-git.${{ github.run_number }}"
+        release_name: "slik-linux-git.${{ github.run_number }}"
       env:
         GITHUB_TOKEN: ${{ github.token }}
 
