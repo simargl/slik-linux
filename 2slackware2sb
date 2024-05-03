@@ -49,7 +49,7 @@ fn_build_rootfs() {
     find $STARTDIR/root.x86_64/usr/lib64 -maxdepth 2 -name *.a -not -name libanl.a \
     -not -name libc.a -not -name libc_nonshared.a -not -name libcrypt.a -not -name libdl.a \
     -not -name libg.a -not -name libm.a -not -name libpthread.a -not -name libresolv.a \
-    -not -name librt.a -not -name libutil.a | xargs rm
+    -not -name librt.a -not -name libutil.a -not -name libfltk* | xargs rm
     # clang
     rm -r $STARTDIR/root.x86_64/usr/bin/{c-index-test,clang*,llvm*,obj2yaml}
     rm -r $STARTDIR/root.x86_64/usr/include/clang*
