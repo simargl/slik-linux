@@ -17,19 +17,14 @@ jobs:
     - name: Create squashfs
       run: sudo sh 2slackware2sb
 
-    - name: Get current date
-      id: date
-      run: |
-        echo "{date}={$(date +'%Y-%m-%d-%H-%M')}" >> $GITHUB_STATE
-
     - name: Create release
       uses: actions/create-release@v1
       id: create_release
       with:
         draft: false
         prerelease: false
-        tag_name: "slik-linux-${{ env.date }}"
-        release_name: "slik-linux-${{ env.date }}"
+        tag_name: "slik-linux-${{ github.event.repository.updated_at}}"
+        release_name: "slik-linux-${{ github.event.repository.updated_at}}"
       env:
         GITHUB_TOKEN: ${{ github.token }}
 
