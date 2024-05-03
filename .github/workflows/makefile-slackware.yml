@@ -15,7 +15,12 @@ jobs:
       run: sudo apt-get update; sudo ln -sf /bin/bash /bin/sh
 
     - name: Create squashfs
-      run: sudo sh 2slackware2sb
+      run: |
+        sudo mkdir /tmp/root.x86_64
+        sudo touch /tmp/root.x86_64/f
+        sudo mkdir /tmp/output
+        sudo mksquashfs /tmp/root.x86_64 /tmp/output/fs-slackware.sb
+      #run: sudo sh 2slackware2sb
 
     - name: Create release
       uses: actions/create-release@v1
@@ -37,4 +42,5 @@ jobs:
         upload_url: ${{ steps.create_release.outputs.upload_url }}
         asset_path: /tmp/output/fs-slackware.sb
         asset_name: fs-slackware.sb
-        asset_content_type: application/vnd.squashfs
+        asset_content_type: application/octet-stream
+
