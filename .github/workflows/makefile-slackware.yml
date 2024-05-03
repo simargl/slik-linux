@@ -1,6 +1,8 @@
 name: CI fs-slackware.sb
 
 on:
+  schedule:
+    - cron: '0 0 * * SAT'
   workflow_dispatch: 
 
 jobs:
