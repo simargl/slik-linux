@@ -19,7 +19,7 @@ jobs:
         sudo mkdir /tmp/root.x86_64
         sudo touch /tmp/root.x86_64/f
         sudo mkdir /tmp/output
-        sudo mksquashfs /tmp/root.x86_64 /tmp/output/fs-slackware.sb
+        sudo mksquashfs /tmp/root.x86_64 fs-slackware.sb
       #run: sudo sh 2slackware2sb
 
     - name: Create release
