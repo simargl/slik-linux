@@ -42,7 +42,6 @@ fn_build_rootfs() {
     rm -r $STARTDIR/root.x86_64/usr/share/gtk-doc
     rm -r $STARTDIR/root.x86_64/usr/man
     rm -r $STARTDIR/root.x86_64/etc/asound.conf
-    rm -r $STARTDIR/root.x86_64/tmp/*
     find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs rm
     # static libs
     find $STARTDIR/root.x86_64/usr/lib64 -maxdepth 2 -name *.a -not -name libanl.a \
