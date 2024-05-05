@@ -54,12 +54,13 @@ fn_pkg_search() {
                 nv=$(basename "$result" | sed 's/\(.*\)-[^-]*-[^-]*$/\1/')
                 pkgnameR="$(echo "$nv" | sed 's/-[^-]*$//')"
                 pkgverR="$(echo "$nv" | sed 's/.*-//')"
+                pkgrelR="$(echo ${result##*-} | sed 's/.t.z//')"
                 I="Not installed"
                 if [ -f "$DBPATH/installed/$pkgnameR/pkginfo" ]; then 
                     source "$DBPATH/installed/$pkgnameR/pkginfo"
-                    if [ "$pkgverR" == "$pkgver" ]; then I="Installed"; else I="Outdated ($pkgver)"; fi
+                    if [ "$pkgverR-$pkgrelR" == "$pkgver-$pkgrel" ]; then I="Installed"; else I="Old ($pkgver-$pkgrel)"; fi
                 fi
-                printf "%-32s%-28s%s\n" "$pkgnameR" "($pkgverR)" "$I"
+                printf "%-32s%-30s%s\n" "$pkgnameR" "($pkgverR-$pkgrelR)" "$I"
             done <<< "$PKGSEARCH"
         fi
     fi
