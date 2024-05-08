@@ -40,6 +40,7 @@ gobject-introspection
 gperf
 graphene
 graphite2
+gsettings-desktop-schemas
 gtk+3
 gtk4
 gtksourceview3
