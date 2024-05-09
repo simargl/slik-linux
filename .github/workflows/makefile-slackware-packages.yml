@@ -18,9 +18,8 @@ jobs:
 
     - name: Create squashfs
       run: |
-        sudo source 2slackware2sb
-        sudo sh fn_download_and_extract
-        sudo sh fn_build_rootfs
+        sudo sed '$s/fn_compress_rootfs/#fn_compress_rootfs/' -i 2slackware2sb
+        sudo sh 2slackware2sb
 
     - name: Compile packages
       run: |
