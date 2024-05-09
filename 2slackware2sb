@@ -25,9 +25,6 @@ fn_build_rootfs() {
     cp /etc/resolv.conf root.x86_64/etc/
     cp /usr/bin/fetch $STARTDIR/root.x86_64/usr/bin/
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch up"
-    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch dl $(cat $STARTDIR/part2 | tr '\n' ' ')"
-    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch dl $(cat $STARTDIR/part3 | tr '\n' ' ')"
-    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch dl $(cat $STARTDIR/part4 | tr '\n' ' ')"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part2 | tr '\n' ' ')"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part3 | tr '\n' ' ')"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part4 | tr '\n' ' ')"
