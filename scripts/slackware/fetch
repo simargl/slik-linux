@@ -230,6 +230,8 @@ fn_pkg_install() {
     done
     if [ "$LOCAL" = true ]; then exit 0; fi
     fn_check_pkgmatch_exists "$ARGI"
+    ARGD="$ARGI"
+    fn_pkg_download_all
     for ONE in $ARGI; do
         ARG="$ONE"
         if [ -d "$DBPATH/installed/$ARG" ]; then
@@ -239,12 +241,6 @@ fn_pkg_install() {
         if [ -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
             ARG="$(basename "$PKGMATCH")"
             cd "$CACHEDIR" && fn_pkg_install_local && cd "$OLDPWD"
-        else
-            fn_pkg_download
-            if [ -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
-                ARG="$(basename "$PKGMATCH")"
-                cd "$CACHEDIR" && fn_pkg_install_local && cd "$OLDPWD"
-            fi
         fi
     done
 }
