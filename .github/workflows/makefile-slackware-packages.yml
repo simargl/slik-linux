@@ -16,7 +16,7 @@ jobs:
     - name: Install dependencies
       run: sudo apt-get update; sudo ln -sf /bin/bash /bin/sh
 
-    - name: Create squashfs
+    - name: Create rootfs
       run: |
         sudo sed '$s/fn_compress_rootfs/#fn_compress_rootfs/' -i 2slackware2sb
         sudo sh 2slackware2sb
@@ -30,6 +30,7 @@ jobs:
         sudo cp -a scripts/slackware/repo/SlackBuilds /tmp/root.x86_64/
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "sh create_packages.sh"
         sudo umount /tmp/root.x86_64/{proc,sys,dev}
+
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
