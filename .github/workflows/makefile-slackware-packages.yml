@@ -17,7 +17,10 @@ jobs:
       run: sudo apt-get update; sudo ln -sf /bin/bash /bin/sh
 
     - name: Create squashfs
-      run: sudo sh 2slackware2sb
+      run: |
+        sudo source 2slackware2sb
+        sudo sh fn_download_and_extract
+        sudo sh fn_build_rootfs
 
     - name: Compile packages
       run: |
