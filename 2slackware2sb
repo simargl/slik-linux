@@ -25,6 +25,9 @@ fn_build_rootfs() {
     cp /etc/resolv.conf root.x86_64/etc/
     cp /usr/bin/fetch $STARTDIR/root.x86_64/usr/bin/
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch up"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch dl $(cat $STARTDIR/part2 | tr '\n' ' ')"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch dl $(cat $STARTDIR/part3 | tr '\n' ' ')"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch dl $(cat $STARTDIR/part4 | tr '\n' ' ')"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part2 | tr '\n' ' ')"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part3 | tr '\n' ' ')"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part4 | tr '\n' ' ')"
@@ -43,6 +46,7 @@ fn_build_rootfs() {
     rm -r $STARTDIR/root.x86_64/usr/man
     rm -r $STARTDIR/root.x86_64/etc/asound.conf
     find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs rm
+    find $STARTDIR/root.x86_64/usr/share/icons/Adwaita/{128x*,256x*,512x*} -type f | xargs rm
     # static libs
     find $STARTDIR/root.x86_64/usr/lib64 -maxdepth 2 -name *.a -not -name libanl.a \
     -not -name libc.a -not -name libc_nonshared.a -not -name libcrypt.a -not -name libdl.a \
@@ -52,16 +56,13 @@ fn_build_rootfs() {
     rm -r $STARTDIR/root.x86_64/usr/bin/{c-index-test,clang*,llvm*,obj2yaml}
     rm -r $STARTDIR/root.x86_64/usr/include/clang*
     rm -r $STARTDIR/root.x86_64/usr/lib64/{libclang*,clang}
-    # usr bin files   
-    rm -r $STARTDIR/root.x86_64/usr/bin/{alsabat,alsaloop,alsoft-config,cd-info,cdda-player,cmake-gui,diagtool,find-all-symbols}
-    rm -r $STARTDIR/root.x86_64/usr/bin/{gif2webp,lit-cpuid,lldb,lldb-argdumper,lldb-dap,lldb-instr,lldb-server,memusagestat}
-    rm -r $STARTDIR/root.x86_64/usr/bin/{modularize,pp-trace,qv4l2,qvidcap,rsync,setpriv,sqlite3_analyzer,vkconfig,vulkanCapsViewer}
+    # usr bin files
+    chroot /tmp/root.x86_64 /bin/bash -c 'find /usr/bin -type f -exec sh -c '\''if ldd "$1" 2>&1 | grep -q "not found"; then rm "$1"; fi'\'' _ {} \;'
     # wm settings
     sed -i 's/bloe/MerleyKay/g' $STARTDIR/root.x86_64/usr/share/fluxbox/init
     sed -i 's/(urxvt) {urxvt}/(console) {system-terminal-emulator}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
     sed -i 's/(firefox) {firefox}/(web) {system-web-browser}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
     sed -i '/\[exec\]   (Run) {fbrun}/i\      [exec\] (files) {system-file-manager}' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
-    sed -i 's/(konqueror) {kfmclient openProfile filemanagement}/(files) {system-file-manager}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "echo exec fluxbox>/root/.xinitrc"
 }
 
