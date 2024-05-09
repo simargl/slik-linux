@@ -93,8 +93,6 @@ fn_pkg_download() {
         if [[ "$PKGMATCH" != "" ]]; then
             if [ ! -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
                 fn_download_file "$PKGMATCH" "$CACHEDIR" "$(basename "$PKGMATCH")"
-            else
-                printf "Using cached ${CYAN}%s${RESET}\n" "$(basename "$PKGMATCH")"
             fi
             if [ ! -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
                 printf "${RED}%s download failed${RESET}\n" "$(basename "$PKGMATCH")"
