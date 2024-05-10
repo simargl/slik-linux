@@ -77,7 +77,7 @@ fn_pkg_search() {
 }
 
 fn_get_pkgmatch() {
-    grep "$1|" "$DBPATH/packages.db" | head -1
+    grep "^$1|" "$DBPATH/packages.db" | head -1
 }
 
 fn_check_pkgmatch_exists() {
