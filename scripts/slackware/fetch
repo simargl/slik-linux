@@ -45,7 +45,7 @@ fn_repo_update() {
         done
         rm CHECKSUMS.md5*
     done
-    printf "Repositories: %d Packages: %d\n" "${#REPOSITORY[@]}" "$(($(wc -l < "$DBPATH/packages.db") - 1))"
+    printf "Repositories: %d Packages: %d\n" "${#REPOSITORY[@]}" "$(grep -c ^ "$DBPATH/packages.db")"
 }
 
 extract_package_info() {
