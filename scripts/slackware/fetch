@@ -35,26 +35,36 @@ fn_download_file() {
 }
 
 fn_repo_update() {
-    [ -f $DBPATH/packages.list ] && rm $DBPATH/packages.list
+    [ -f "$DBPATH/packages.db" ] && rm "$DBPATH/packages.db"
     printf "Synchronizing package databases...\n"
     for ((i=0; i<${#REPOSITORY[@]}; ++i)); do
-        fn_download_file ${REPOSITORY[i]}/CHECKSUMS.md5 $DBPATH ${REPOSITORY[i]}
-        cd $DBPATH || exit
-        grep -E '\.tgz$|\.txz$' CHECKSUMS.md5 | cut -c 36- | sed "s|^|${REPOSITORY[i]}|g" | sort >> packages.list
-        rm CHECKSUMS.md5
+        fn_download_file "${REPOSITORY[i]}/CHECKSUMS.md5" "$DBPATH" "${REPOSITORY[i]}"
+        cd "$DBPATH" || exit
+        grep -E '\.tgz$|\.txz$' CHECKSUMS.md5 | cut -c 36- | sed "s|^|${REPOSITORY[i]}|g" | sort | while IFS= read -r line; do
+            extract_package_info "$line" >> "$DBPATH/packages.db"
+        done
+        rm CHECKSUMS.md5*
     done
-    printf "Repositories: %d Packages: %d\n" "${#REPOSITORY[@]}" "$(grep -c ^ packages.list)"
+    printf "Repositories: %d Packages: %d\n" "${#REPOSITORY[@]}" "$(($(wc -l < "$DBPATH/packages.db") - 1))"
+}
+
+extract_package_info() {
+    local url="$1"
+    nv=$(basename "$url" | sed 's/\(.*\)-[^-]*-[^-]*$/\1/')
+    n="$(echo "$nv" | sed 's/-[^-]*$//')"
+    v="$(echo "$nv" | sed 's/.*-//')"
+    r="$(echo ${url##*-} | sed 's/.t.z//')"
+    echo "$n|$v|$r|$url"
 }
 
 fn_pkg_search() {
     if [[ $ARG ]]; then
-        PKGSEARCH=$(grep "$ARG" "$DBPATH/packages.list")
+        PKGSEARCH=$(grep "$ARG" "$DBPATH/packages.db")
         if [[ "$PKGSEARCH" != "" ]]; then
             while read -r result; do
-                nv=$(basename "$result" | sed 's/\(.*\)-[^-]*-[^-]*$/\1/')
-                pkgnameR="$(echo "$nv" | sed 's/-[^-]*$//')"
-                pkgverR="$(echo "$nv" | sed 's/.*-//')"
-                pkgrelR="$(echo ${result##*-} | sed 's/.t.z//')"
+                pkgnameR="$(echo "$result" | cut -d '|' -f1)"
+                pkgverR="$(echo "$result" | cut -d '|' -f2)"
+                pkgrelR="$(echo "$result" | cut -d '|' -f3)"
                 I="Not installed"
                 if [ -f "$DBPATH/installed/$pkgnameR/pkginfo" ]; then 
                     source "$DBPATH/installed/$pkgnameR/pkginfo"
@@ -67,7 +77,7 @@ fn_pkg_search() {
 }
 
 fn_get_pkgmatch() {
-    grep "/$1-[0-9]" "$DBPATH/packages.list" | head -1
+    grep "$1|" "$DBPATH/packages.db" | head -1
 }
 
 fn_check_pkgmatch_exists() {
@@ -91,8 +101,10 @@ fn_pkg_download() {
     if [ $ARG ]; then
         PKGMATCH=$(fn_get_pkgmatch "$ARG")
         if [[ "$PKGMATCH" != "" ]]; then
-            if [ ! -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
-                fn_download_file "$PKGMATCH" "$CACHEDIR" "$(basename "$PKGMATCH")"
+            URL=$(echo $PKGMATCH | cut -d '|' -f4)
+            FILE=$(basename $URL)
+            if [ ! -f "$FILE" ]; then
+                fn_download_file "$URL" "$CACHEDIR" "$FILE"
             fi
             if [ ! -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
                 printf "${RED}%s download failed${RESET}\n" "$(basename "$PKGMATCH")"
@@ -230,16 +242,21 @@ fn_pkg_install() {
     done
     if [ "$LOCAL" = true ]; then exit 0; fi
     fn_check_pkgmatch_exists "$ARGI"
-    ARGD="$ARGI"
-    fn_pkg_download_all
     for ONE in $ARGI; do
         ARG="$ONE"
         if [ -d "$DBPATH/installed/$ARG" ]; then
             printf "${RED}%s is already installed${RESET}\n" "$ARG" && exit 1
         fi
+    done
+    ARGD="$ARGI"
+    fn_pkg_download_all
+    for ONE in $ARGI; do
+        ARG="$ONE"
         PKGMATCH="$(fn_get_pkgmatch "$ARG")"
-        if [ -f "$CACHEDIR/$(basename "$PKGMATCH")" ]; then
-            ARG="$(basename "$PKGMATCH")"
+        URL=$(echo $PKGMATCH | cut -d '|' -f4)
+        FILE=$(basename $URL)
+        if [ -f "$CACHEDIR/$FILE" ]; then
+            ARG="$FILE"
             cd "$CACHEDIR" && fn_pkg_install_local && cd "$OLDPWD"
         fi
     done
