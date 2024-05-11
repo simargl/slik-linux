@@ -28,11 +28,20 @@ jobs:
         sudo mount -o bind /dev /tmp/root.x86_64/dev
         sudo cp -a scripts/slackware/repo/create_packages.sh /tmp/root.x86_64/
         sudo cp -a scripts/slackware/repo/SlackBuilds /tmp/root.x86_64/
+        sudo cp -a scripts/slackware/repo/gen_repos_files.sh /tmp/root.x86_64/
+        sudo cp -a scripts/slackware/repo/genreprc /tmp/root.x86_64/
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "sh create_packages.sh"
         sudo umount /tmp/root.x86_64/{proc,sys,dev}
+
+    - name: Create repository data
+      run: |
+        sudo mkdir /tmp/root.x86_64/tmp/slackware
+        sudo cp /tmp/root.x86_64/tmp/*.t?z /tmp/root.x86_64/tmp/slackware
+        cd /tmp/root.x86_64/tmp/
+        sudo echo | sudo yes |sudo ./gen_repos_files.sh
 
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
         name: slackware-packages
-        path: /tmp/root.x86_64/tmp/*.t?z
+        path: /tmp/root.x86_64/tmp/slackware/*
