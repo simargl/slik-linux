@@ -25,8 +25,8 @@ jobs:
         sudo mount -t sysfs sys /tmp/root.x86_64/sys
         sudo mount -o bind /dev /tmp/root.x86_64/dev
         sudo cp -a scripts/slackware/repo/sur.sh /tmp/root.x86_64/
+        sudo chroot /tmp/root.x86_64/ /bin/bash -c "fetch it linuxdoc-tools"
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "sh sur.sh \
-        fetch it linuxdoc-tools \
         https://slackbuilds.org/slackbuilds/15.0/libraries/libfm-extra.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/libraries/menu-cache.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/desktop/lxmenu-data.tar.gz \
