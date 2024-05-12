@@ -26,7 +26,7 @@ jobs:
         sudo mount -o bind /dev /tmp/root.x86_64/dev
         sudo cp -a scripts/slackware/repo/sur.sh /tmp/root.x86_64/
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "sh sur.sh \
-        https://slackbuilds.org/slackbuilds/15.0/system/qemu.tar.gz"
+        https://slackbuilds.org/slackbuilds/15.0/graphics/gpicview.tar.gz"
         sudo umount /tmp/root.x86_64/{proc,sys,dev}
 
     - name: Archive artifacts
