@@ -1,4 +1,4 @@
-name: CI slik-repo-packages
+name: CI slik-repository
 
 on:
   schedule:
