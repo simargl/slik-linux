@@ -237,7 +237,12 @@ fn_pkg_install() {
         if [ -f "$ONE" ]; then
             LOCAL="true"
             ARG="$ONE"
-            fn_pkg_install_local
+            NAME=$(echo $ARG | sed 's/\(.*\)-[^-]*-[^-]*$/\1/' | sed 's/-[^-]*$//')
+            if [ -d "$DBPATH/installed/$NAME" ]; then
+                printf "${RED}%s is already installed${RESET}\n" "$ARG"
+            else
+                fn_pkg_install_local
+            fi
         fi
     done
     if [ "$LOCAL" = true ]; then exit 0; fi
