@@ -1,4 +1,4 @@
-name: CI slik-repository
+name: CI slik-repopkg
 
 on:
   schedule:
@@ -34,5 +34,5 @@ jobs:
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: slackware-packages
+        name: slackware
         path: /tmp/root.x86_64/tmp/*.t?z
