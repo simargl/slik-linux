@@ -1,4 +1,4 @@
-name: CI Slackware User Repository (SUR)
+name: CI SUR
 
 on:
   workflow_dispatch: 
