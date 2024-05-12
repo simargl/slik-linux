@@ -1,4 +1,4 @@
-name: CI slackware-packages
+name: CI slik-repo-packages
 
 on:
   schedule:
