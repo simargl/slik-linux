@@ -26,7 +26,11 @@ jobs:
         sudo mount -o bind /dev /tmp/root.x86_64/dev
         sudo cp -a scripts/slackware/repo/sur.sh /tmp/root.x86_64/
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "sh sur.sh \
-        https://slackbuilds.org/slackbuilds/15.0/graphics/gpicview.tar.gz"
+        https://slackbuilds.org/slackbuilds/15.0/libraries/libfm-extra.tar.gz \
+        https://slackbuilds.org/slackbuilds/15.0/libraries/menu-cache.tar.gz \
+        https://slackbuilds.org/slackbuilds/15.0/desktop/lxmenu-data.tar.gz \
+        https://slackbuilds.org/slackbuilds/15.0/libraries/libfm.tar.gz \
+        https://slackbuilds.org/slackbuilds/15.0/system/pcmanfm.tar.gz"
         sudo umount /tmp/root.x86_64/{proc,sys,dev}
 
     - name: Archive artifacts
