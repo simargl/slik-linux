@@ -24,6 +24,8 @@ jobs:
         sudo mount -t proc proc /tmp/root.x86_64/proc
         sudo mount -t sysfs sys /tmp/root.x86_64/sys
         sudo mount -o bind /dev /tmp/root.x86_64/dev
+        sudo chroot /tmp/root.x86_64/ /bin/bash -c "fetch \
+        it $(fetch sr /d/|grep -v Installed|cut -d '(' -f1)"
         sudo cp -a scripts/slackware/repo/sur.sh /tmp/root.x86_64/
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "sh sur.sh \
         https://slackbuilds.org/slackbuilds/15.0/system/lxtask.tar.gz"
@@ -32,5 +34,5 @@ jobs:
     - name: Archive artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: slackware-packages
+        name: sur
         path: /tmp/root.x86_64/tmp/*.t?z
