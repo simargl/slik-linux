@@ -26,9 +26,11 @@ jobs:
         sudo mount -o bind /dev /tmp/root.x86_64/dev
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "fetch \
         it $(fetch sr /d/|grep -v Installed|cut -d '(' -f1)"
+        sudo chroot /tmp/root.x86_64/ /bin/bash -c "fetch \
+        it qt5"        
         sudo cp -a scripts/slackware/repo/sur.sh /tmp/root.x86_64/
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "sh sur.sh \
-        https://slackbuilds.org/slackbuilds/15.0/system/lxtask.tar.gz"
+        https://slackbuilds.org/slackbuilds/15.0/office/featherpad.tar.gz"
         sudo umount /tmp/root.x86_64/{proc,sys,dev}
 
     - name: Archive artifacts
