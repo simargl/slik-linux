@@ -21,5 +21,6 @@ fn_create_sbo_packages() {
     done
 }
 
+fetch it $(fetch sr /d/|grep -v Installed|cut -d '(' -f1)
 fn_create_sbo_packages "$@"
 
