@@ -25,9 +25,9 @@ jobs:
         sudo mount -t sysfs sys /tmp/root.x86_64/sys
         sudo mount -o bind /dev /tmp/root.x86_64/dev
         sudo cp -a scripts/slackware/repo/sur.sh /tmp/root.x86_64/
-        sudo chroot /tmp/root.x86_64/ /bin/bash -c "fetch it qt5 hunspell"   
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "sh sur.sh \
-        https://slackbuilds.org/slackbuilds/15.0/office/featherpad.tar.gz"
+        https://slackbuilds.org/slackbuilds/15.0/libraries/physfs.tar.gz \
+        https://slackbuilds.org/slackbuilds/15.0/games/warzone2100.tar.gz"
         sudo umount /tmp/root.x86_64/{proc,sys,dev}
 
     - name: Archive artifacts
