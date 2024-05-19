@@ -22,14 +22,16 @@
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-wget -c https://gitlab.freedesktop.org/emersion/libliftoff/-/releases/v0.5.0dev/downloads/libliftoff-0.5.0dev.tar.gz
+# Modification for libliftoff-0.5.0dev by simargl <https://github.com/simargl>
+
+wget -c https://github.com/simargl/slik-linux/releases/download/sources/libliftoff-0.5.0dev.tar.gz
 
 cd $(dirname $0) ; CWD=$(pwd)
 
 PRGNAM=libliftoff
 VERSION=${VERSION:-0.5.0dev}
 BUILD=${BUILD:-1}
-TAG=${TAG:-_nwg}
+TAG=${TAG:-_slik}
 PKGTYPE=${PKGTYPE:-txz}
 
 if [ -z "$ARCH" ]; then
@@ -48,7 +50,7 @@ if [ ! -z "${PRINT_PACKAGE_NAME}" ]; then
   exit 0
 fi
 
-TMP=${TMP:-/tmp/nwg}
+TMP=${TMP:-/tmp/slik}
 PKG=$TMP/package-$PRGNAM
 OUTPUT=${OUTPUT:-/tmp}
 
