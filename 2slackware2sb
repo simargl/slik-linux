@@ -43,7 +43,6 @@ fn_build_rootfs() {
     rm -r $STARTDIR/root.x86_64/usr/man
     rm -r $STARTDIR/root.x86_64/etc/asound.conf
     find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs rm
-    find $STARTDIR/root.x86_64/usr/share/icons/Adwaita/{128x*,256x*,512x*} -type f | xargs rm
     # static libs
     find $STARTDIR/root.x86_64/usr/lib64 -maxdepth 2 -name *.a -not -name libanl.a \
     -not -name libc.a -not -name libc_nonshared.a -not -name libcrypt.a -not -name libdl.a \
