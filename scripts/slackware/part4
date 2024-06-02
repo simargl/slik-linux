@@ -11,9 +11,7 @@ labwc
 libdisplay-info
 libliftoff
 libslirp
-luajit
 mako
-mpv
 scdoc
 seatd
 spdlog
