@@ -30,8 +30,6 @@ fn_create_sbo_packages() {
         https://slackbuilds.org/slackbuilds/15.0/libraries/gtk-layer-shell.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/libraries/jsoncpp.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/libraries/libslirp.tar.gz \
-        https://slackbuilds.org/slackbuilds/15.0/development/luajit.tar.gz \
-        https://slackbuilds.org/slackbuilds/15.0/multimedia/mpv.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/libraries/spdlog.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/network/transmission.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/network/yt-dlp.tar.gz \
