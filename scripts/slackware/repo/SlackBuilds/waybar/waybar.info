@@ -1,5 +1,5 @@
 PRGNAM="waybar"
-VERSION="0.10.2"
+VERSION="0.10.3"
 HOMEPAGE="https://github.com/Alexays/Waybar"
 DOWNLOAD="https://github.com/Alexays/Waybar/archive/0.10.3/Waybar-0.10.3.tar.gz"
 MD5SUM="1c675235e5951f1909d8430b09595606"
