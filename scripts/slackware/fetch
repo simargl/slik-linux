@@ -23,15 +23,8 @@ fi
 
 # Download file with wget ($1=filename; $2=target directory; $3=comment)
 fn_download_file() {
-    printf "${YELLOW}>>> ${CYAN}Downloading ${GREEN}%s${RESET}" "$3"
-    wget -q -nv --no-check-certificate "$1" -P "$2" &
-    pid=$!
-    while kill -0 $pid >/dev/null 2>&1; do
-        printf "."
-        sleep 0.5
-    done
-    wait $pid
-    printf "${YELLOW} DONE${RESET}\n"
+    printf "${YELLOW}>>> ${CYAN}Downloading ${GREEN}%s${RESET}\n" "$3"
+    wget -q -nv --no-check-certificate "$1" -P "$2"
 }
 
 fn_repo_update() {
@@ -120,9 +113,11 @@ fn_pkg_download_all() {
     fn_check_pkgmatch_exists $ARGD
     for ONE in $ARGD; do
         ARG="$ONE"
-        fn_pkg_download
+        fn_pkg_download &
     done
+    wait
 }
+
 
 fn_write_metadata() {
     nv=$(echo $1 | sed 's/\(.*\)-[^-]*-[^-]*$/\1/')
