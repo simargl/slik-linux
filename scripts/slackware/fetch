@@ -100,6 +100,9 @@ fn_pkg_download() {
                 fn_download_file "$URL" "$CACHEDIR" "$FILE"
             fi
             if [ ! -f "$CACHEDIR/$FILE" ]; then
+                fn_download_file "$URL" "$CACHEDIR" "$FILE"
+            fi            
+            if [ ! -f "$CACHEDIR/$FILE" ]; then
                 printf "${RED}%s download failed${RESET}\n" "$(basename "$PKGMATCH")"
                 exit 1
             fi
