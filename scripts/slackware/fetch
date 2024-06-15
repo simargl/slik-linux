@@ -100,9 +100,6 @@ fn_pkg_download() {
                 fn_download_file "$URL" "$CACHEDIR" "$FILE"
             fi
             if [ ! -f "$CACHEDIR/$FILE" ]; then
-                fn_download_file "$URL" "$CACHEDIR" "$FILE"
-            fi            
-            if [ ! -f "$CACHEDIR/$FILE" ]; then
                 printf "${RED}%s download failed${RESET}\n" "$(basename "$PKGMATCH")"
                 exit 1
             fi
@@ -114,13 +111,19 @@ fn_pkg_download() {
 
 fn_pkg_download_all() {
     fn_check_pkgmatch_exists $ARGD
-    for ONE in $ARGD; do
-        ARG="$ONE"
+    max_parallel=10
+    current_jobs=0
+    for pkg in $ARGD; do
+        ARG="$pkg"
         fn_pkg_download &
+        current_jobs=$((current_jobs + 1))
+        if [ "$current_jobs" -ge "$max_parallel" ]; then
+            wait -n 
+            current_jobs=$((current_jobs - 1))
+        fi
     done
     wait
 }
-
 
 fn_write_metadata() {
     nv=$(echo $1 | sed 's/\(.*\)-[^-]*-[^-]*$/\1/')
