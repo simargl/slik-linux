@@ -50,7 +50,7 @@ fn_build_rootfs() {
     -not -name libg.a -not -name libm.a -not -name libpthread.a -not -name libresolv.a \
     -not -name librt.a -not -name libutil.a -not -name libfltk* | xargs rm
     # clang
-    rm -r $STARTDIR/root.x86_64/usr/bin/{c-index-test,clang*,llvm*,obj2yaml}
+    rm -r $STARTDIR/root.x86_64/usr/bin/{c-index-test,clang*,llvm*,obj2yaml,mlir*}
     rm -r $STARTDIR/root.x86_64/usr/include/clang*
     rm -r $STARTDIR/root.x86_64/usr/lib64/{libclang*,clang}
     # usr bin files
