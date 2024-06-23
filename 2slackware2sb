@@ -52,7 +52,7 @@ fn_build_rootfs() {
     # clang
     rm -r $STARTDIR/root.x86_64/usr/bin/{c-index-test,clang*,llvm*,obj2yaml,mlir*}
     rm -r $STARTDIR/root.x86_64/usr/include/clang*
-    rm -r $STARTDIR/root.x86_64/usr/lib64/{libclang*,clang}
+    rm -r $STARTDIR/root.x86_64/usr/lib64/{libclang*,libMLIR*,clang}
     # usr bin files
     chroot /tmp/root.x86_64 /bin/bash -c 'find /usr/bin -type f -exec sh -c '\''if ldd "$1" 2>&1 | grep -q "not found"; then rm "$1"; fi'\'' _ {} \;'
     # wm settings
