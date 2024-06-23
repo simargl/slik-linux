@@ -27,6 +27,7 @@ jobs:
         version_prefix="${repo_name}-0.7.0-"
         gh release list --limit 100 --json tagName -q '.[].tagName' | grep "^${version_prefix}" | while read -r tag; do
           gh release delete "$tag" --yes
+          gh tag delete "$tag"
         done
 
     - name: Release
