@@ -28,6 +28,7 @@ jobs:
         gh release list --limit 100 --json tagName -q '.[].tagName' | grep "^${version_prefix}" | while read -r tag; do
           gh release delete "$tag" --yes
         done
+
     - name: Release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
