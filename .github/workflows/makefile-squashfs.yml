@@ -29,8 +29,7 @@ jobs:
         repo_name="${{ github.event.repository.name }}"
         version_prefix="${repo_name}-0.7.0-"
         gh release list --limit 100 --json tagName -q '.[].tagName' | grep "^${version_prefix}" | while read -r tag; do
-          gh release delete "$tag" --yes
-          gh api --method DELETE "repos/${{ github.repository }}/git/refs/tags/$tag"
+          gh release delete "$tag" --yes --cleanup-tag 
         done
 
     - name: Release
