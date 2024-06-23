@@ -19,7 +19,7 @@ jobs:
     - name: Create squashfs
       run: sudo sh 2slackware2sb
 
-    - name: Remove matching releases
+    - name: Remove old releases
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
