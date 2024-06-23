@@ -14,12 +14,15 @@ jobs:
     - uses: actions/checkout@v4
 
     - name: Install dependencies
-      run: sudo apt-get update; sudo ln -sf /bin/bash /bin/sh
+      run: |
+        sudo apt-get update
+        sudo ln -sf /bin/bash /bin/sh
+        sudo apt-get install -y gh jq
 
     - name: Create squashfs
       run: sudo sh 2slackware2sb
 
-    - name: Remove old releases
+    - name: Remove old releases and tags
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
@@ -27,12 +30,11 @@ jobs:
         version_prefix="${repo_name}-0.7.0-"
         gh release list --limit 100 --json tagName -q '.[].tagName' | grep "^${version_prefix}" | while read -r tag; do
           gh release delete "$tag" --yes
-          gh tag delete "$tag"
+          gh api --method DELETE "repos/${{ github.repository }}/git/refs/tags/$tag"
         done
 
     - name: Release
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      run: >-
-        gh release create ${{ github.event.repository.name }}-0.7.0-${{ github.run_number }}
-        "/tmp/output/fs-slackware.sb"
+      run: |
+        gh release create "${{ github.event.repository.name }}-0.7.0-${{ github.run_number }}" "/tmp/output/fs-slackware.sb"
