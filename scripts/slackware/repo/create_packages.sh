@@ -29,6 +29,7 @@ fn_create_sbo_packages() {
         https://slackbuilds.org/slackbuilds/15.0/libraries/girara.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/libraries/gtk-layer-shell.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/libraries/jsoncpp.tar.gz \
+        https://slackbuilds.org/slackbuilds/15.0/libraries/libdisplay-info.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/libraries/libslirp.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/libraries/spdlog.tar.gz \
         https://slackbuilds.org/slackbuilds/15.0/network/transmission.tar.gz \
@@ -64,7 +65,7 @@ fn_create_nwg_packages() {
     fi
     cd nwg-shell_slackbuilds
     sed s'/bash-completions=true/bash-completions=false/'g -i grim/grim.SlackBuild
-    for i in gammastep grim libdisplay-info scdoc seatd swaybg wlroots; do
+    for i in gammastep grim scdoc seatd swaybg wlroots; do
         cd $i; source $PWD/$i.info
         if [ ! -f "$(basename $DOWNLOAD)" ]; then
             wget $DOWNLOAD
