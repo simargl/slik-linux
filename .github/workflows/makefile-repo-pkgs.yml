@@ -2,7 +2,7 @@ name: CI Repo-pkgs
 
 on:
   schedule:
-    - cron: '5 1 */2 * *'
+    - cron: '1 1 */2 * *'
   workflow_dispatch: 
 
 jobs:
