@@ -30,7 +30,7 @@ jobs:
         sudo cp -a scripts/slackware/repo/SlackBuilds /tmp/root.x86_64/
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "sh create_packages.sh"
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "mkdir /tmp/slackware"
-        sudo chroot /tmp.root.x86_64/ /bin/bash -c "mv /tmp/*.t?z /tmp/slackware"
+        sudo chroot /tmp/root.x86_64/ /bin/bash -c "mv /tmp/*.t?z /tmp/slackware"
         sudo cp -a scripts/slackware/repo/gen_repos_files.sh /tmp/root.x86_64/tmp/
         sudo cp -a scripts/slackware/repo/genreprc /tmp/root.x86_64/tmp/
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "cd /tmp; echo|yes|bash gen_repos_files.sh"
@@ -61,11 +61,36 @@ jobs:
             }
           }
 
+          return release ? release.id : null;
+        result-encoding: string
+
     - name: Upload new release assets
-      uses: actions/upload-release-asset@v2
+      if: steps.cleanup.outputs.result != 'null'
+      uses: actions/github-script@v6
       with:
-        repo_token: ${{ secrets.GITHUB_TOKEN }}
-        release_id: ${{ steps.cleanup.outputs.release_id }}
-        asset_path: /tmp/root.x86_64/tmp/slackware/*
-        asset_name: slackware
-        asset_content_type: application/gzip
+        script: |
+          const { Octokit } = require("@octokit/core");
+          const fs = require('fs');
+          const path = require('path');
+          const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
+
+          const release_id = ${{ steps.cleanup.outputs.result }};
+          const dir = '/tmp/root.x86_64/tmp/slackware/';
+          const files = fs.readdirSync(dir);
+
+          for (const file of files) {
+            const filePath = path.join(dir, file);
+            const content = fs.readFileSync(filePath);
+
+            await octokit.request('POST /repos/{owner}/{repo}/releases/{release_id}/assets', {
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              release_id: release_id,
+              name: file,
+              data: content,
+              headers: {
+                'content-type': 'application/gzip',
+                'content-length': content.length
+              }
+            });
+          }
