@@ -44,9 +44,7 @@ jobs:
 
     - name: Remove old release assets
       run: |
-        gh release list --repo $GITHUB_REPOSITORY --limit 100 --json name --jq '.[] | select(.name == "slackware-current") | .name' | while read -r release; do
-          gh release delete "$release" --yes --cleanup-tag
-        done
+        gh release delete slackware-current --repo $GITHUB_REPOSITORY --yes --cleanup-tag || true
 
     - name: Create new release and upload assets
       run: |
