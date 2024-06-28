@@ -15,8 +15,9 @@ jobs:
 
     - name: Install gh CLI
       run: |
-        sudo apt update
-        sudo apt install gh
+        sudo apt-get update
+        sudo ln -sf /bin/bash /bin/sh
+        sudo apt-get install -y gh jq
 
     - name: Create rootfs
       run: |
