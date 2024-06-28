@@ -13,8 +13,12 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install dependencies
-      run: sudo apt-get update; sudo ln -sf /bin/bash /bin/sh
+    - name: Install gh CLI
+      run: |
+        sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-key C99B11DEB97541F0
+        sudo apt-add-repository https://cli.github.com/packages
+        sudo apt update
+        sudo apt install gh
 
     - name: Create rootfs
       run: |
@@ -37,60 +41,13 @@ jobs:
         sudo umount /tmp/root.x86_64/{proc,sys,dev}
 
     - name: Remove old release assets
-      id: cleanup
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const { Octokit } = require("@octokit/core");
-          const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-          
-          const { data: releases } = await octokit.request('GET /repos/{owner}/{repo}/releases', {
-            owner: context.repo.owner,
-            repo: context.repo.repo
-          });
+      run: |
+        release_id=$(gh release list --repo $GITHUB_REPOSITORY --limit 1 --tag slackware-current --json id --jq '.[0].id')
+        
+        if [ -n "$release_id" ]; then
+          gh release delete $release_id --repo $GITHUB_REPOSITORY --yes
+        fi
 
-          const release = releases.find(release => release.tag_name === 'slackware-current');
-          
-          if (release) {
-            for (const asset of release.assets) {
-              await octokit.request('DELETE /repos/{owner}/{repo}/releases/assets/{asset_id}', {
-                owner: context.repo.owner,
-                repo: context.repo.repo,
-                asset_id: asset.id
-              });
-            }
-          }
-
-          return release ? release.id : null;
-        result-encoding: string
-
-    - name: Upload new release assets
-      if: steps.cleanup.outputs.result != 'null'
-      uses: actions/github-script@v6
-      with:
-        script: |
-          const { Octokit } = require("@octokit/core");
-          const fs = require('fs');
-          const path = require('path');
-          const octokit = new Octokit({ auth: process.env.GITHUB_TOKEN });
-
-          const release_id = ${{ steps.cleanup.outputs.result }};
-          const dir = '/tmp/root.x86_64/tmp/slackware/';
-          const files = fs.readdirSync(dir);
-
-          for (const file of files) {
-            const filePath = path.join(dir, file);
-            const content = fs.readFileSync(filePath);
-
-            await octokit.request('POST /repos/{owner}/{repo}/releases/{release_id}/assets', {
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              release_id: release_id,
-              name: file,
-              data: content,
-              headers: {
-                'content-type': 'application/gzip',
-                'content-length': content.length
-              }
-            });
-          }
+    - name: Create new release and upload assets
+      run: |
+        gh release create slackware-current --repo $GITHUB_REPOSITORY --notes "New release" /tmp/root.x86_64/tmp/slackware/*
