@@ -13,7 +13,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
 
-    - name: Install gh CLI
+    - name: Install dependencies
       run: |
         sudo apt-get update
         sudo ln -sf /bin/bash /bin/sh
@@ -41,7 +41,7 @@ jobs:
 
     - name: Remove old release assets
       run: |
-        release_id=$(gh release list --repo $GITHUB_REPOSITORY --limit 1 --tag slackware-current --json id --jq '.[0].id')
+        release_id=$(gh release list --repo $GITHUB_REPOSITORY --json tag_name --jq '.[] | select(.tag_name == "slackware-current") | .id')
         
         if [ -n "$release_id" ]; then
           gh release delete $release_id --repo $GITHUB_REPOSITORY --yes
