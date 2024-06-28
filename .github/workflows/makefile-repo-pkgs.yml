@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
     steps:
     - uses: actions/checkout@v4
@@ -44,11 +44,10 @@ jobs:
 
     - name: Remove old release assets
       run: |
-        release_id=$(gh release list --repo $GITHUB_REPOSITORY --json tag_name --jq '.[] | select(.tag_name == "slackware-current") | .id')
-        
-        if [ -n "$release_id" ]; then
-          gh release delete $release_id --repo $GITHUB_REPOSITORY --yes
-        fi
+        # Remove releases tagged with slackware-current
+        gh release list --repo $GITHUB_REPOSITORY --limit 100 --json name --jq '.[] | select(.name == "slackware-current") | .name' | while read -r release; do
+          gh release delete "$release" --yes
+        done
 
     - name: Create new release and upload assets
       run: |
