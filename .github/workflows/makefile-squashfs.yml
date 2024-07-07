@@ -2,7 +2,7 @@ name: CI Squashfs
 
 on:
   schedule:
-    - cron: '2 2 */2 * *'
+    - cron: '2 2 */4 * *'
   workflow_dispatch: 
 
 jobs:
