@@ -21,12 +21,12 @@
 #  OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
 #  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-# Modification for labwc-0.7.2. by simargl <https://github.com/simargl>
+# Modification for labwc-0.7.4 by simargl <https://github.com/simargl>
 
 cd $(dirname $0) ; CWD=$(pwd)
 
 PRGNAM=labwc
-VERSION=${VERSION:-0.7.2}
+VERSION=${VERSION:-0.7.4}
 BUILD=${BUILD:-1}
 TAG=${TAG:-_slik}
 PKGTYPE=${PKGTYPE:-tgz}
