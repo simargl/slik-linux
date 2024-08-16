@@ -5,7 +5,7 @@
 # Written by simargl <https://github.com/simargl>
 
 PRGNAM=swayimg
-VERSION=${VERSION:-2.4}
+VERSION=${VERSION:-3.1}
 ARCH=${ARCH:-x86_64}		# this should not change
 BUILD=${BUILD:-1}
 TAG=${TAG:-_slik}		# use "_SBo" for slackbuilds.org
@@ -38,7 +38,7 @@ mkdir -p $TMP $PKG $OUTPUT
 cd $TMP
 rm -rf $PRGNAM-$VERSION
 #tar xzvf $CWD/$PRGNAM-$VERSION.tar.gz
-tar xzvf $CWD/v2.4.tar.gz
+tar xzvf $CWD/v3.1.tar.gz
 cd $PRGNAM-$VERSION
 chown -R root:root .
 find . \
