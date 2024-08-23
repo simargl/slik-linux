@@ -3,9 +3,6 @@
 # Author: simargl <https://github.com/simargl>
 # License: GPL v3
 
-. ./config
-fn_prepare_output_dir
-
 STARTDIR="/tmp"
 OUTPUTDIR="/tmp/output"
 ROOTFS="oracular-base-amd64.tar.gz"
