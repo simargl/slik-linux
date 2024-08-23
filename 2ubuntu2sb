@@ -7,7 +7,7 @@
 fn_prepare_output_dir
 
 STARTDIR="/tmp"
-OUTPUTDIR="$PWD/output/iso/$SYSNAME/modules"
+OUTPUTDIR="/tmp/output"
 ROOTFS="oracular-base-amd64.tar.gz"
 
 fn_download_and_extract() {
