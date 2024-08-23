@@ -1,7 +1,0 @@
-PRGNAM="swayimg"
-VERSION="2.4"
-HOMEPAGE="https://github.com/artemsen/swayimg"
-DOWNLOAD="https://github.com/artemsen/swayimg/archive/refs/tags/v3.1.tar.gz"
-MD5SUM="f7dfbdf74b4cfb9de1ae1ada29abd901"
-MAINTAINER="simargl <https://github.com/simargl>"
-EMAIL=""
