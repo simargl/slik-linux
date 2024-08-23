@@ -65,7 +65,7 @@ fn_create_nwg_packages() {
     fi
     cd nwg-shell_slackbuilds
     sed s'/bash-completions=true/bash-completions=false/'g -i grim/grim.SlackBuild
-    for i in gammastep grim scdoc seatd swaybg wlroots; do
+    for i in gammastep grim seatd swaybg wlroots; do
         cd $i; source $PWD/$i.info
         if [ ! -f "$(basename $DOWNLOAD)" ]; then
             wget $DOWNLOAD
