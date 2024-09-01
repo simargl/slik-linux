@@ -1,0 +1,61 @@
+#!/bin/bash
+# 
+# Author: simargl <https://github.com/simargl>
+# License: GPL v3
+
+STARTDIR="/tmp"
+OUTPUTDIR="/tmp/output"
+ROOTFS="$(wget -q -O - https://ftp-stud.hs-esslingen.de/pub/fedora/linux/development/41/Container/x86_64/images/ |grep Base-Generic-Minimal | grep -o -P '(?<=href=").*(?=")' | tail -1 | cut -d "\"" -f1)"
+
+fn_download_and_extract() {
+    cd $STARTDIR
+    if [ ! -f $ROOTFS ]; then
+        wget https://ftp-stud.hs-esslingen.de/pub/fedora/linux/development/41/Container/x86_64/images/$ROOTFS
+    fi
+    if [ -d root.x86_64 ]; then rm -r root.x86_64; fi
+    mkdir root.x86_64
+    bsdtar -xf $ROOTFS
+    LAYER=$(du blobs/sha256/* | sort | tail -1| cut -f2)
+    bsdtar -xf $LAYER -C root.x86_64
+}
+
+fn_build_and_compress() {
+    # prepare
+    cd $STARTDIR
+    cp /etc/resolv.conf root.x86_64/etc/
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "if [ ! -f /usr/bin/dnf ]; then ln -s dnf5 /usr/bin/dnf; fi"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "echo install_weak_deps=False >> /etc/dnf/dnf.conf"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "dnf update -y"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "dnf install transmission-gtk \
+    vte291 gtksourceview3 nss wget libICE libSM libXScrnSaver libXpresent \
+    libXv alsa-utils zathura-pdf-poppler git imv desktop-file-utils mesa-dri-drivers \
+    psmisc dbus-daemon dbus-glib librsvg2 bsdtar tar syslinux xorriso cpio unrar \
+    unzip net-tools htop hostname mkfontscale ntfs-3g librsvg2-tools bzip2 \
+    python3-gobject webp-pixbuf-loader xdg-utils passwd lshw labwc seatd \
+    xorg-x11-server-Xwayland swaybg waybar fontawesome-6-free-fonts gammastep \
+    libnotify fuse-libs xz libatomic geany systemd-udev pcre rsvg-pixbuf-loader \
+    mako android-tools grim mpv openh264 yt-dlp mpg123 dhcpcd rsync fltk-devel \
+    g++ SDL2_image -y"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "dnf clean all -y"
+    ln -sf bash $STARTDIR/root.x86_64/usr/bin/sh
+    # cache
+    rm -r $STARTDIR/root.x86_64/usr/share/mime/globs
+    rm -r $STARTDIR/root.x86_64/usr/share/icons/hicolor/icon-theme.cache
+    rm -r $STARTDIR/root.x86_64/usr/share/glib-2.0/schemas/gschemas.compiled
+    # other
+    rm -r $STARTDIR/root.x86_64/usr/lib/locale
+    rm -r $STARTDIR/root.x86_64/usr/share/doc
+    rm -r $STARTDIR/root.x86_64/usr/share/info
+    rm -r $STARTDIR/root.x86_64/usr/share/licenses
+    rm -r $STARTDIR/root.x86_64/usr/share/locale
+    rm -r $STARTDIR/root.x86_64/usr/share/man
+    find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs rm
+    find $STARTDIR/root.x86_64/ -type f -name '*.log' | xargs rm
+    # compress
+    if [ ! -d $OUTPUTDIR ]; then mkdir -p $OUTPUTDIR; fi
+    if [ -f $OUTPUTDIR/fs-fedora.sb ]; then rm $OUTPUTDIR/fs-fedora.sb; fi
+    mksquashfs root.x86_64/ $OUTPUTDIR/fs-fedora.sb -comp gzip -b 1024k
+}
+
+fn_download_and_extract
+fn_build_and_compress
