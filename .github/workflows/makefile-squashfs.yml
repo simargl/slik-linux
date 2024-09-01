@@ -20,7 +20,7 @@ jobs:
         sudo apt-get install -y gh jq
 
     - name: Create squashfs
-      run: sudo sh 2ubuntu2sb
+      run: sudo sh 2fedora2sb
 
     - name: Remove old releases and tags
       env:
