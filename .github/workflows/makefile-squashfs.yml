@@ -17,7 +17,7 @@ jobs:
       run: |
         sudo apt-get update
         sudo ln -sf /bin/bash /bin/sh
-        sudo apt-get install -y gh jq
+        sudo apt-get install -y gh jq libarchive-tools 
 
     - name: Create squashfs
       run: sudo sh 2fedora2sb
