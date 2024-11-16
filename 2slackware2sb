@@ -3,13 +3,9 @@
 # Author: simargl <https://github.com/simargl>
 # License: GPL v3
 
-. ./config
-fn_prepare_output_dir
-
 STARTDIR="/tmp"
-OUTPUTDIR="$PWD/output/iso/$SYSNAME/modules"
-ROOTFS=""
-SCRIPTSDIR="scripts/test/slackware"
+OUTPUTDIR="/tmp/output"
+SCRIPTSDIR="scripts/slackware"
 
 fn_download_and_extract() {
     install -Dm755 $SCRIPTSDIR/fetch /usr/bin/fetch
