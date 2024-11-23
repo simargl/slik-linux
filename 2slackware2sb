@@ -63,6 +63,9 @@ fn_build_rootfs() {
     rm -r $STARTDIR/root.x86_64/usr/share/{doc,libwacom,samba,vulkan}
     rm -r $STARTDIR/root.x86_64/usr/lib64/{d3d,gallium-pipe,libdxcompiler.so,libRusticl*,libVkLayer*,liblldb*}
     rm -r $STARTDIR/root.x86_64/usr/libexec/samba
+    # python cleanup
+    find $STARTDIR/root.x86_64 -type f -name "*.pyc" -delete
+    find $STARTDIR/root.x86_64 -type f -name "*.pyo" -delete
 }
 
 fn_wm_settings() {
