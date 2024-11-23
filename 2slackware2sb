@@ -10,7 +10,8 @@ SCRIPTSDIR="scripts/slackware"
 fn_download_and_extract() {
     install -Dm755 $SCRIPTSDIR/fetch /usr/bin/fetch
     install -Dm755 $SCRIPTSDIR/crux2slack /usr/bin/crux2slack
-    cp $SCRIPTSDIR/{part1,part2,part3,part4} $STARTDIR
+    cp $SCRIPTSDIR/{part1,part2,part3} $STARTDIR
+    if [[ $1 != "-c" ]]; then cp $SCRIPTSDIR/part4 $STARTDIR; fi
     cd $STARTDIR
     fetch up; fetch cc; fetch dl $(cat part1 | tr '\n' ' ')
     if [ -d root.x86_64 ]; then rm -r root.x86_64; fi
@@ -33,8 +34,10 @@ fn_build_rootfs() {
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch cc"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part3 | tr '\n' ' ')"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch cc"
-    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part4 | tr '\n' ' ')"
-    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch cc"
+    if [[ $1 != "-c" ]]; then 
+        chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part4 | tr '\n' ' ')"
+        chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch cc"
+    fi
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "update-ca-certificates -f"
     # cache
     rm -r $STARTDIR/root.x86_64/usr/share/mime/globs
@@ -103,6 +106,6 @@ fn_compress_rootfs() {
     mksquashfs root.x86_64/ $OUTPUTDIR/fs-slackware.sb -comp gzip -b 1024k
 }
 
-fn_download_and_extract
-fn_build_rootfs
+fn_download_and_extract $@
+fn_build_rootfs $@
 fn_compress_rootfs
