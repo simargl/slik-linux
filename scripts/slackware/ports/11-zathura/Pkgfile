@@ -1,0 +1,16 @@
+# Description: Portable Foreign Function Interface Library
+# URL: https://sourceware.org/libffi/
+# Maintainer: CRUX System Team, core-ports at crux dot nu
+
+name=libffi
+version=3.4.6
+release=1
+source=(https://github.com/libffi/libffi/releases/download/v$version/$name-$version.tar.gz)
+
+build() {
+	cd $name-$version
+	./configure --prefix=/usr
+	make
+	make DESTDIR=$PKG install
+	rm -r $PKG/usr/share/info
+}
