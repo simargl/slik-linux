@@ -1,16 +1,17 @@
-# Description: Portable Foreign Function Interface Library
-# URL: https://sourceware.org/libffi/
-# Maintainer: CRUX System Team, core-ports at crux dot nu
+# Description:  A highly customizable and functional document viewer.
+# URL:          https://pwmt.org/projects/zathura/
+# Maintainer:   ax, ax at slackware dot eu
+# Depends on:   girara gtk3
+# Optional:     check texlive intltool libseccomp doxygen docutils sqlite3
 
-name=libffi
-version=3.4.6
+name=zathura
+version=0.4.3
 release=1
-source=(https://github.com/libffi/libffi/releases/download/v$version/$name-$version.tar.gz)
+source=(https://pwmt.org/projects/$name/download/$name-$version.tar.xz)
 
 build() {
 	cd $name-$version
-	./configure --prefix=/usr
-	make
-	make DESTDIR=$PKG install
-	rm -r $PKG/usr/share/info
+	meson build --prefix=/usr
+	DESTDIR=$PKG ninja -C build install
+
 }
