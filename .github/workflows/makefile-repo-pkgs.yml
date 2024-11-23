@@ -36,7 +36,7 @@ jobs:
         sudo cp -a scripts/slackware/ports/* /tmp/root.x86_64/tmp/ports
         sudo cp -a scripts/slackware/gen_repos_files.sh /tmp/root.x86_64/tmp/
         sudo cp -a scripts/slackware/genreprc /tmp/root.x86_64/tmp/
-        sudo chroot /tmp/root.x86_64/ /bin/bash -c "cd /tmp/ports; for i in $(ls); do cd $i; crux2slack; cd OUTPUT; fetch it *; cd ..;cd ..; done"
+        sudo chroot /tmp/root.x86_64/ /bin/bash -c "cd /tmp/ports; for i in \$(ls); do cd \$i; crux2slack; cd OUTPUT; fetch it *; cd ..;cd ..; done"
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "mkdir /tmp/slackware/"
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "mv /tmp/ports/*/OUTPUT*.t?z /tmp/slackware/"
         sudo chroot /tmp/root.x86_64/ /bin/bash -c "cd /tmp; echo|yes|bash gen_repos_files.sh"
