@@ -1,0 +1,77 @@
+#!/bin/bash
+
+# Universal Slackware Package Builder
+
+# Define the STARTDIR (where Pkgfile is located)
+STARTDIR="$(pwd)"
+
+# Check for the Pkgfile
+if [ ! -f "$STARTDIR/Pkgfile" ]; then
+    echo "Error: Pkgfile not found in the current directory."
+    exit 1
+fi
+
+SRC="$STARTDIR/SRC"
+PKG="${STARTDIR}/PKG"
+OUTPUT="${STARTDIR}/OUTPUT"
+mkdir -p "$SRC" "$PKG" "$OUTPUT"
+
+echo "Cleaning up..."
+rm -rf "$PKG"
+rm -rf "$SRC"/*
+sed -i 's|./configure|./configure --build=x86_64-slackware-linux --host=x86_64-slackware-linux|' "$STARTDIR/Pkgfile"
+source "$STARTDIR/Pkgfile"
+
+# Handle files listed in the source array
+echo "Checking source files..."
+for src in "${source[@]}"; do
+    if [ -f "$STARTDIR/$src" ]; then
+        echo "Copying $src to SRC directory..."
+        cp "$STARTDIR/$src" "$SRC/"
+    fi
+done
+
+# Handle downloading and extracting source files (only archives)
+echo "Downloading and extracting source..."
+for url in "${source[@]}"; do
+    file=$(basename "$url")
+    if [[ "$file" =~ \.tar\.gz$ || "$file" =~ \.tar\.xz$ || "$file" =~ \.tar\.bz2$ ]]; then
+        if [ ! -f "$SRC/$file" ]; then
+            wget -q "$url" -P "$SRC"
+        fi
+        tar -xf "$SRC/$file" -C "$SRC" || { echo "Error: Failed to extract $file"; exit 1; }
+    fi
+done
+
+# Run the build function starting from SRC
+echo "Running the build function in $SRC..."
+cd "$SRC" || exit 1
+build || { echo "Error: Build function failed."; exit 1; }
+
+# Organize for Slackware
+echo "Organizing files for Slackware package..."
+mkdir -p "$PKG/install"
+cat <<EOF >"$PKG/install/slack-desc"
+# HOW TO EDIT THIS FILE:
+# See "man 5 slack-desc" for details.
+#
+# Package: $name
+# Version: $version
+# Summary: $(head -n 1 <<< "$description")
+#
+$name: $(head -n 1 <<< "$description")
+$name: Built from universal Pkgfile for Slackware.
+$name:
+EOF
+
+# Create Slackware package
+echo "Creating Slackware package..."
+ARCH=$(uname -m)
+PACKAGE_NAME="${name}-${version}-${ARCH}-${release}.txz"
+cd "$PKG" || exit 1
+makepkg -l y -c n "${OUTPUT}/${PACKAGE_NAME}" || {
+    echo "Error: Failed to create Slackware package."
+    exit 1
+}
+
+echo "Slackware package created: ${OUTPUT}/${PACKAGE_NAME}"

@@ -14,7 +14,7 @@ CACHEDIR="/var/cache/slackware"
 REPOSITORY=('https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-current/patches'
             'https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-current/slackware64'
             'https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-current/extra'
-            'https://ponce.cc/slackware/slackware64-current/packages')
+            'https://github.com/simargl/slik-linux/releases/download/slackware-current')
 
 # Root check      
 if [[ $EUID -ne 0 ]]; then

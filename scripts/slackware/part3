@@ -5,15 +5,15 @@ aalib
 aom
 atkmm
 audiofile
-cairomm1
+cairomm
 dav1d
 esound
 ffmpeg
 flac
 fltk
 freeglut
-glibmm2
-gtkmm4
+glibmm
+gtkmm3
 jansson
 lame
 libXpresent
@@ -30,7 +30,7 @@ libmad
 libmng
 libogg
 libplacebo
-libsigc++3
+libsigc++
 libsndfile
 libssh
 libtheora
@@ -52,7 +52,7 @@ ocl-icd
 openal-soft
 opus
 orc
-pangomm2
+pangomm
 pulseaudio
 samba
 sdl
@@ -60,7 +60,6 @@ speex
 speexdsp
 talloc
 tevent
-transmission
 v4l-utils
 vid.stab
 vulkan-sdk
