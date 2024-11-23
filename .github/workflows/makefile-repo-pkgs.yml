@@ -24,9 +24,8 @@ jobs:
 
     - name: Create rootfs
       run: |
-        sudo sed 's|fn_compress_rootfs|#fn_compress_rootfs|g' -i 2slackware2sb
-        sudo sed 's|cp $SCRIPTSDIR/{part1,part2,part3,part4} $STARTDIR/cp $SCRIPTSDIR/{part1,part2,part3} $STARTDIR||g' -i 2slackware2sb
-        sudo sh 2slackware2sb
+        sudo sed '$s/fn_compress_rootfs/#fn_compress_rootfs/' -i 2slackware2sb
+        sudo sh 2slackware2sb -c
 
     - name: Compile packages
       run: |
