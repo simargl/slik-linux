@@ -11,7 +11,14 @@ source=(https://download.geany.org/geany-$version.tar.gz)
 
 build() {
 	cd $name-$version
-	./configure --build=x86_64-slackware-linux --host=x86_64-slackware-linux --build=x86_64-slackware-linux --host=x86_64-slackware-linux --prefix=/usr --libdir=/usr/lib64 --disable-static --enable-shared --disable-plugins
-	make -j4
+	./configure --build=x86_64-slackware-linux --host=x86_64-slackware-linux \
+        --libdir=/usr/lib64 \
+        --prefix=/usr \
+        --disable-static \
+        --enable-shared \
+        --disable-plugins \
+        --disable-vte \
+        --enable-gtk3 
+	make -j3
 	make DESTDIR=$PKG install
 }

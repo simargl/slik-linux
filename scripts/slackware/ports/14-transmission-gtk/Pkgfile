@@ -27,7 +27,7 @@ build() {
 		-D ENABLE_GTK=ON \
 		-D USE_GTK_VERSION=3 \
 
-	cmake --build build -j4
+	cmake --build build -j3
 	DESTDIR=$PKG cmake --install build
 
 	rm -r $PKG/usr/share/{doc,transmission}

@@ -1,0 +1,17 @@
+# Description: A fast image manipulation library
+# URL: https://sourceforge.net/projects/enlightenment/
+# Maintainer: Juergen Daubert, jue at crux dot nu
+# Depends on: freetype xorg-libsm xorg-libxext
+# Optional: libid3tag libjpeg-turbo librsvg libtiff giflib
+
+name=imlib2
+version=1.12.3
+release=1
+source=(https://download.sourceforge.net/enlightenment/$name-$version.tar.xz)
+
+build() {
+	cd $name-$version
+	./configure --prefix=/usr --libdir=/usr/lib64 --disable-static
+	make
+	make DESTDIR=$PKG install
+}
