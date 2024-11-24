@@ -13,12 +13,10 @@ fn_download_and_extract() {
     cp $SCRIPTSDIR/{part1,part2,part3} $STARTDIR
     if [[ $1 != "-c" ]]; then cp $SCRIPTSDIR/part4 $STARTDIR; fi
     cd $STARTDIR
-    fetch up; fetch cc; fetch dl $(cat part1 | tr '\n' ' ')
     if [ -d root.x86_64 ]; then rm -r root.x86_64; fi
     rm *.t?z 2>/dev/null
-    mv /var/cache/slackware/* .
-    fetch xa
-    mv install root.x86_64
+    fetch up; fetch cc; fetch dl $(cat part1 | tr '\n' ' ')
+    mv /var/cache/slackware/* .; fetch xa; mv install root.x86_64
     rm *.t?z 2>/dev/null
 }
 
@@ -30,13 +28,10 @@ fn_build_rootfs() {
     cp /usr/bin/crux2slack $STARTDIR/root.x86_64/usr/bin/
     mknod -m 666 root.x86_64/dev/null c 1 3
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch up"
-    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part2 | tr '\n' ' ')"
-    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch cc"
-    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part3 | tr '\n' ' ')"
-    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch cc"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part2 | tr '\n' ' '); fetch cc"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part3 | tr '\n' ' '); fetch cc"
     if [[ $1 != "-c" ]]; then 
-        chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part4 | tr '\n' ' ')"
-        chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch cc"
+        chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part4 | tr '\n' ' '); fetch cc"
     fi
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "update-ca-certificates -f"
     # cache
@@ -45,11 +40,8 @@ fn_build_rootfs() {
     rm -r $STARTDIR/root.x86_64/usr/share/glib-2.0/schemas/gschemas.compiled
     rm -r $STARTDIR/root.x86_64/usr/lib64/gdk-pixbuf-2.0/2.10.0/loaders.cache
     # other
-    rm -r $STARTDIR/root.x86_64/usr/doc
-    rm -r $STARTDIR/root.x86_64/usr/info
-    rm -r $STARTDIR/root.x86_64/usr/share/locale
-    rm -r $STARTDIR/root.x86_64/usr/share/gtk-doc
-    rm -r $STARTDIR/root.x86_64/usr/man
+    rm -r $STARTDIR/root.x86_64/usr/{doc,info,man}
+    rm -r $STARTDIR/root.x86_64/usr/share/{gtk-doc,locale}
     rm -r $STARTDIR/root.x86_64/etc/asound.conf
     find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs rm
     # static libs
@@ -61,12 +53,12 @@ fn_build_rootfs() {
     rm -r $STARTDIR/root.x86_64/usr/bin/{c-index-test,clang*,llvm*,obj2yaml,mlir*}
     rm -r $STARTDIR/root.x86_64/usr/include/clang*
     rm -r $STARTDIR/root.x86_64/usr/lib64/{libclang*,libMLIR*,clang}
-    # usr bin files
-    chroot /tmp/root.x86_64 /bin/bash -c 'find /usr/bin -type f -exec sh -c '\''if ldd "$1" 2>&1 | grep -q "not found"; then rm "$1"; fi'\'' _ {} \;'
     # more removal
     rm -r $STARTDIR/root.x86_64/usr/share/{doc,libwacom,samba,vulkan}
     rm -r $STARTDIR/root.x86_64/usr/lib64/{d3d,gallium-pipe,libdxcompiler.so,libRusticl*,libVkLayer*,liblldb*}
     rm -r $STARTDIR/root.x86_64/usr/libexec/samba
+    # usr bin files
+    chroot /tmp/root.x86_64 /bin/bash -c 'find /usr/bin -type f -exec sh -c '\''if ldd "$1" 2>&1 | grep -q "not found"; then rm "$1"; fi'\'' _ {} \;'
     # python cleanup
     find $STARTDIR/root.x86_64 -type f -name "*.pyc" -delete
     find $STARTDIR/root.x86_64 -type f -name "*.pyo" -delete
