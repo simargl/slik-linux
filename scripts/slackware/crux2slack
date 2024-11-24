@@ -64,6 +64,26 @@ $name: Built from universal Pkgfile for Slackware.
 $name:
 EOF
 
+# Clean package
+for dir in "$PKG"/bin "$PKG"/sbin "$PKG"/usr/bin "$PKG"/usr/sbin; do
+    if [ -d $dir ]; then
+        find $dir -type f -exec strip '{}' > /dev/null 2>&1 \;
+    fi
+done
+find "$PKG" -name "*.so*" -exec strip --strip-unneeded '{}' > /dev/null 2>&1 \;
+find "$PKG" -name "*.a" -exec strip -g '{}' > /dev/null 2>&1 \;
+find "$PKG" -type f -name "*.pyc" -delete
+find "$PKG" -type f -name "*.pyo" -delete
+if [ -d "$PKG"/usr/doc ]; then rm -rf "$PKG"/usr/doc; fi
+if [ -d "$PKG"/usr/man ]; then rm -rf "$PKG"/usr/man; fi
+if [ -d "$PKG"/usr/share/doc ]; then rm -rf "$PKG"/usr/share/doc; fi
+if [ -d "$PKG"/usr/share/gtk-doc ]; then rm -rf "$PKG"/usr/share/gtk-doc; fi
+if [ -d "$PKG"/usr/share/man ]; then rm -rf "$PKG"/usr/share/man; fi
+if [ -d "$PKG"/usr/share/info ]; then rm -rf "$PKG"/usr/share/info; fi
+if [ -d "$PKG"/usr/share/gnome/help ]; then rm -rf "$PKG"/usr/share/gnome/help; fi
+if [ -d "$PKG"/usr/share/help ]; then rm -rf "$PKG"/usr/share/help; fi
+if [ -f "$PKG"/usr/lib/locale ]; then rm -rf "$PKG"/usr/lib/locale; fi
+
 # Create Slackware package
 echo "Creating Slackware package..."
 ARCH=$(uname -m)
@@ -75,3 +95,5 @@ makepkg -l y -c n "${OUTPUT}/${PACKAGE_NAME}" || {
 }
 
 echo "Slackware package created: ${OUTPUT}/${PACKAGE_NAME}"
+#restore Pkgfile
+sed -i 's|./configure --build=x86_64-slackware-linux --host=x86_64-slackware-linux|./configure|' "$STARTDIR/Pkgfile"
