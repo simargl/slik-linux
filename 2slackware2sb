@@ -8,8 +8,7 @@ OUTPUTDIR="/tmp/output"
 SCRIPTSDIR="scripts/slackware"
 
 fn_download_and_extract() {
-    install -Dm755 $SCRIPTSDIR/fetch /usr/bin/fetch
-    install -Dm755 $SCRIPTSDIR/crux2slack /usr/bin/crux2slack
+    install -Dm755 $SCRIPTSDIR/{fetch,crux2slack} /usr/bin/
     cp $SCRIPTSDIR/{part1,part2,part3} $STARTDIR
     if [[ $1 != "-c" ]]; then cp $SCRIPTSDIR/part4 $STARTDIR; fi
     cd $STARTDIR
