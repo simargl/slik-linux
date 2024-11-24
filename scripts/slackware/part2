@@ -8,6 +8,7 @@ bc
 binutils
 bison
 brotli
+c-ares
 ca-certificates
 cairo
 cmake
@@ -56,6 +57,7 @@ jasper
 json-c
 json-glib
 kernel-headers
+krb5
 lcms2
 libICE
 libSM
@@ -101,6 +103,8 @@ libevent
 libfontenc
 libglvnd
 libgudev
+libidn2
+libidn2
 libindicator
 libinput
 libjpeg-turbo
@@ -113,6 +117,7 @@ libpthread-stubs
 libpwquality
 librsvg
 libseccomp
+libssh2
 libtiff
 libtool
 libunwind
@@ -139,6 +144,7 @@ nghttp2
 nghttp3
 npth
 openjpeg
+openldap
 openssl-solibs
 pam
 pam-krb5
