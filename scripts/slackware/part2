@@ -43,7 +43,6 @@ graphene
 graphite2
 gsettings-desktop-schemas
 gtk+3
-gtk4
 gtksourceview3
 guile
 harfbuzz
@@ -125,8 +124,6 @@ libwacom
 libwebp
 libxcb
 libxcvt
-libxfce4ui
-libxfce4util
 libxkbcommon
 libxkbfile
 libxshmfence
@@ -193,8 +190,6 @@ xdg-utils
 xev
 xf86-input-evdev
 xf86-video-vesa
-xfce4-notifyd
-xfconf
 xinit
 xkbcomp
 xkbevd
