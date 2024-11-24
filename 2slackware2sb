@@ -63,7 +63,6 @@ fn_build_rootfs() {
     rm -r $STARTDIR/root.x86_64/usr/lib64/{libclang*,libMLIR*,clang}
     # usr bin files
     chroot /tmp/root.x86_64 /bin/bash -c 'find /usr/bin -type f -exec sh -c '\''if ldd "$1" 2>&1 | grep -q "not found"; then rm "$1"; fi'\'' _ {} \;'
-    fn_wm_settings
     # more removal
     rm -r $STARTDIR/root.x86_64/usr/share/{doc,libwacom,samba,vulkan}
     rm -r $STARTDIR/root.x86_64/usr/lib64/{d3d,gallium-pipe,libdxcompiler.so,libRusticl*,libVkLayer*,liblldb*}
@@ -71,30 +70,6 @@ fn_build_rootfs() {
     # python cleanup
     find $STARTDIR/root.x86_64 -type f -name "*.pyc" -delete
     find $STARTDIR/root.x86_64 -type f -name "*.pyo" -delete
-}
-
-fn_wm_settings() {
-    rm $STARTDIR/root.x86_64/usr/bin/startx
-    sed -i 's/bloe/MerleyKay/g' $STARTDIR/root.x86_64/usr/share/fluxbox/init
-    sed -i 's/(urxvt) {urxvt}/(console) {system-terminal-emulator}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
-    sed -i 's/(firefox) {firefox}/(web) {system-web-browser}/g' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
-    sed -i '/\[exec\]   (Run) {fbrun}/i\      [exec\] (files) {system-file-manager}' $STARTDIR/root.x86_64/usr/share/fluxbox/menu
-    sed -i 's/176 :Exec amixer sset Master,0 5%+/74 :Exec amixer sset Master,0 5%+/g' $STARTDIR/root.x86_64/usr/share/fluxbox/keys
-    sed -i 's/174 :Exec amixer sset Master,0 5%-/73 :Exec amixer sset Master,0 5%-/g' $STARTDIR/root.x86_64/usr/share/fluxbox/keys
-    sed -i 's/160 :Exec amixer sset Master,0 toggle/72 :Exec amixer sset Master,0 toggle/g' $STARTDIR/root.x86_64/usr/share/fluxbox/keys
-    sed -i 's/background:                          mod/background:                          flat/g' $STARTDIR/root.x86_64/usr/share/fluxbox/styles/MerleyKay
-    sed -i 's/background.modX:                     5//g' $STARTDIR/root.x86_64/usr/share/fluxbox/styles/MerleyKay
-    sed -i 's/background.modY:                     5//g' $STARTDIR/root.x86_64/usr/share/fluxbox/styles/MerleyKay
-    sed -i 's|background.color:                    rgb:52/60/75|background.color:                    rgb:30/30/30|g' $STARTDIR/root.x86_64/usr/share/fluxbox/styles/MerleyKay
-    sed -i 's|background.colorTo:                  rgb:62/70/85||g' $STARTDIR/root.x86_64/usr/share/fluxbox/styles/MerleyKay
-    echo "session.screen0.windowPlacement: UnderMousePlacement" >> $STARTDIR/root.x86_64/usr/share/fluxbox/init
-    echo "Mod4 space :ExecCommand dlauncher
-Mod4 x :ExecCommand wmlogout
-Mod4 t :ExecCommand system-terminal-emulator
-Mod4 f :ExecCommand system-file-manager
-Mod4 e :ExecCommand system-text-editor
-Mod4 w :ExecCommand system-web-browser
-75 :Exec randPic.sh" >> $STARTDIR/root.x86_64/usr/share/fluxbox/keys
 }
 
 fn_compress_rootfs() {
