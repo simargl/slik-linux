@@ -1,0 +1,24 @@
+# Description: Geany is a powerful, stable and lightweight programmer's text editor that provides tons of useful features without bogging down your workflow. 
+# URL: https://www.geany.org/
+# Maintainer: https://github.com/simargl/slik-linux
+# Depends on: 
+# Optional: 
+
+name=geany
+version=2.0
+release=1
+source=(https://download.geany.org/geany-$version.tar.gz)
+
+build() {
+	cd $name-$version
+	./configure --build=x86_64-slackware-linux --host=x86_64-slackware-linux \
+        --libdir=/usr/lib64 \
+        --prefix=/usr \
+        --disable-static \
+        --enable-shared \
+        --disable-plugins \
+        --disable-vte \
+        --enable-gtk3 
+	make -j4
+	make DESTDIR=$PKG install
+}
