@@ -15,11 +15,17 @@ SRC="$STARTDIR/SRC"
 PKG="${STARTDIR}/PKG"
 OUTPUT="${STARTDIR}/OUTPUT"
 mkdir -p "$SRC" "$PKG" "$OUTPUT"
+fn_replace_in_pkgfile_configure() {
+    sed -i 's|./configure|./configure --build=x86_64-slackware-linux --host=x86_64-slackware-linux|' "$1"
+}
+fn_restore_in_pkgfile_configure() {
+    sed -i 's|./configure --build=x86_64-slackware-linux --host=x86_64-slackware-linux|./configure|' "$1"
+}
 
 echo "Cleaning up..."
 rm -rf "$PKG"
 rm -rf "$SRC"/*
-sed -i 's|./configure|./configure --build=x86_64-slackware-linux --host=x86_64-slackware-linux|' "$STARTDIR/Pkgfile"
+fn_replace_in_pkgfile_configure "$STARTDIR/Pkgfile"
 source "$STARTDIR/Pkgfile"
 
 # Handle files listed in the source array
@@ -46,7 +52,7 @@ done
 # Run the build function starting from SRC
 echo "Running the build function in $SRC..."
 cd "$SRC" || exit 1
-build || { echo "Error: Build function failed."; exit 1; }
+build || { echo "Error: Build function failed."; fn_restore_in_pkgfile_configure "$STARTDIR/Pkgfile" && exit 1; }
 
 # Organize for Slackware
 echo "Organizing files for Slackware package..."
@@ -96,4 +102,4 @@ makepkg -l y -c n "${OUTPUT}/${PACKAGE_NAME}" || {
 
 echo "Slackware package created: ${OUTPUT}/${PACKAGE_NAME}"
 #restore Pkgfile
-sed -i 's|./configure --build=x86_64-slackware-linux --host=x86_64-slackware-linux|./configure|' "$STARTDIR/Pkgfile"
+fn_restore_in_pkgfile_configure "$STARTDIR/Pkgfile"
