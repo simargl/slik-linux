@@ -1,0 +1,22 @@
+# Description: Lightweight panel/taskbar.
+# URL: https://gitlab.com/nick87720z/tint2
+# Maintainer: John McQuah, jmcquah at disroot dot org
+# Depends on: imlib2 librsvg startup-notification xorg-libxcomposite xorg-libxdamage xorg-libxinerama xorg-libxrandr
+
+name=tint2
+version=17.0.1
+release=1
+source=(http://deb.debian.org/debian/pool/main/t/tint2/tint2_${version}.orig.tar.bz2)
+
+build() {
+    cmake -S $name-v$version -B build -G Ninja \
+        -D CMAKE_INSTALL_PREFIX=/usr \
+        -D CMAKE_BUILD_TYPE=Release \
+        -D CMAKE_CXX_FLAGS_RELEASE="$CXXFLAGS" \
+        -D CMAKE_C_FLAGS_RELEASE="$CFLAGS" \
+        -D ENABLE_TINT2CONF=OFF \
+        -Wno-dev
+    ninja -C build
+    DESTDIR=$PKG ninja -C build install
+    rm -r $PKG/{etc,usr/share/doc}
+}
