@@ -2,12 +2,20 @@
 
 # Universal Slackware Package Builder
 
+# Define color variables
+RESET="\033[0m"
+GREEN="\033[32m"     # Success messages
+YELLOW="\033[33m"    # Warnings
+RED="\033[31m"       # Error messages
+BLUE="\033[34m"      # General status messages
+CYAN="\033[36m"      # Download/Extract status messages
+
 # Define the STARTDIR (where Pkgfile is located)
 STARTDIR="$(pwd)"
 
 # Check for the Pkgfile
 if [ ! -f "$STARTDIR/Pkgfile" ]; then
-    echo "Error: Pkgfile not found in the current directory."
+    echo -e "${RED}Error: Pkgfile not found in the current directory.${RESET}"
     exit 1
 fi
 
@@ -15,63 +23,80 @@ SRC="$STARTDIR/SRC"
 PKG="${STARTDIR}/PKG"
 OUTPUT="${STARTDIR}/OUTPUT"
 mkdir -p "$SRC" "$PKG" "$OUTPUT"
+
 fn_replace_in_pkgfile_configure() {
     sed -i 's|./configure|./configure --build=x86_64-slackware-linux --host=x86_64-slackware-linux|' "$1"
 }
+
 fn_restore_in_pkgfile_configure() {
     sed -i 's|./configure --build=x86_64-slackware-linux --host=x86_64-slackware-linux|./configure|' "$1"
 }
 
-echo "Cleaning up..."
+echo -e "${BLUE}Cleaning up...${RESET}"
 rm -rf "$PKG"
 rm -rf "$SRC"/*
 fn_replace_in_pkgfile_configure "$STARTDIR/Pkgfile"
 source "$STARTDIR/Pkgfile"
 description=$(head -1 Pkgfile | sed 's/# Description: //g')
 
+# Function to wrap the description at 70 characters
+wrap_description() {
+    local desc="$1"
+    local wrapped=""
+    local line
+    while [ -n "$desc" ]; do
+        line=$(echo "$desc" | cut -c1-70)
+        wrapped="$wrapped$name: $line\n"
+        desc="${desc#$line}"
+    done
+    echo -e "$wrapped"
+}
+
 # Handle files listed in the source array
-echo "Checking source files..."
+echo -e "${BLUE}Checking source files...${RESET}"
 for src in "${source[@]}"; do
     if [ -f "$STARTDIR/$src" ]; then
-        echo "Copying $src to SRC directory..."
+        echo -e "${CYAN}Copying $src to SRC directory...${RESET}"
         cp "$STARTDIR/$src" "$SRC/"
     fi
 done
 
 # Handle downloading and extracting source files (only archives)
-echo "Downloading and extracting source..."
+echo -e "${BLUE}Downloading and extracting source...${RESET}"
 for url in "${source[@]}"; do
     file=$(basename "$url")
     if [[ "$file" =~ \.tar\.gz$ || "$file" =~ \.tar\.xz$ || "$file" =~ \.tar\.bz2$ ]]; then
         if [ ! -f "$SRC/$file" ]; then
-            wget -q "$url" -P "$SRC"
+            echo -e "${CYAN}Downloading $file...${RESET}"
+            wget -q "$url" -P "$SRC" || { echo -e "${RED}Error: Failed to download $file${RESET}"; exit 1; }
         fi
-        tar -xf "$SRC/$file" -C "$SRC" || { echo "Error: Failed to extract $file"; exit 1; }
+        echo -e "${CYAN}Extracting $file...${RESET}"
+        tar -xf "$SRC/$file" -C "$SRC" || { echo -e "${RED}Error: Failed to extract $file${RESET}"; exit 1; }
     fi
 done
 
 # Run the build function starting from SRC
-echo "Running the build function in $SRC..."
+echo -e "${BLUE}Running the build function in $SRC...${RESET}"
 cd "$SRC" || exit 1
-build || { echo "Error: Build function failed."; fn_restore_in_pkgfile_configure "$STARTDIR/Pkgfile" && exit 1; }
+build || { echo -e "${RED}Error: Build function failed.${RESET}"; fn_restore_in_pkgfile_configure "$STARTDIR/Pkgfile" && exit 1; }
 
 # Organize for Slackware
-echo "Organizing files for Slackware package..."
+echo -e "${BLUE}Organizing files for Slackware package...${RESET}"
 mkdir -p "$PKG/install"
 cat <<EOF >"$PKG/install/slack-desc"
 # HOW TO EDIT THIS FILE:
 # See "man 5 slack-desc" for details.
 #
 # Package: $name
-# Version: $version
-# Summary: $description
 #
+$(wrap_description "$description")
 $name: 
-$name: Built from universal Pkgfile for Slackware.
-$name:
+$name: This package was built using a universal Pkgfile for Slackware.
+$name: 
 EOF
 
 # Clean package
+echo -e "${BLUE}Cleaning package...${RESET}"
 for dir in "$PKG"/bin "$PKG"/sbin "$PKG"/usr/bin "$PKG"/usr/sbin; do
     if [ -d $dir ]; then
         find $dir -type f -exec strip '{}' > /dev/null 2>&1 \;
@@ -92,15 +117,22 @@ if [ -d "$PKG"/usr/share/help ]; then rm -rf "$PKG"/usr/share/help; fi
 if [ -f "$PKG"/usr/lib/locale ]; then rm -rf "$PKG"/usr/lib/locale; fi
 
 # Create Slackware package
-echo "Creating Slackware package..."
+echo -e "${BLUE}Creating Slackware package...${RESET}"
 ARCH=$(uname -m)
 PACKAGE_NAME="${name}-${version}-${ARCH}-${release}.txz"
 cd "$PKG" || exit 1
 makepkg -l y -c n "${OUTPUT}/${PACKAGE_NAME}" || {
-    echo "Error: Failed to create Slackware package."
+    echo -e "${RED}Error: Failed to create Slackware package.${RESET}"
     exit 1
 }
 
-echo "Slackware package created: ${OUTPUT}/${PACKAGE_NAME}"
-#restore Pkgfile
+# Get the size of the package and installed files
+PACKAGE_SIZE=$(du -sh "${OUTPUT}/${PACKAGE_NAME}" | cut -f1)
+INSTALLED_SIZE=$(du -sh "$PKG" | cut -f1)
+
+echo -e "${GREEN}Slackware package created: ${OUTPUT}/${PACKAGE_NAME}${RESET}"
+echo -e "${BLUE}Package size: ${PACKAGE_SIZE}${RESET}"
+echo -e "${BLUE}Installed size: ${INSTALLED_SIZE}${RESET}"
+
+# restore Pkgfile
 fn_restore_in_pkgfile_configure "$STARTDIR/Pkgfile"
