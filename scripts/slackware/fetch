@@ -15,7 +15,8 @@ REPOSITORY=('https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-current
             'https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-current/slackware64'
             'https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-current/extra'
             'https://github.com/simargl/slik-linux/releases/download/slackware-current-01'
-            'https://github.com/simargl/slik-linux/releases/download/slackware-current-02')
+            'https://github.com/simargl/slik-linux/releases/download/slackware-current-02'
+            'https://github.com/simargl/slik-linux/releases/download/slackware-current-03')
 
 # Root check      
 if [[ $EUID -ne 0 ]]; then
