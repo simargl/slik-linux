@@ -32,14 +32,17 @@ rm -rf "$SRC"/*
 
 source "$STARTDIR/Pkgfile"
 description=$(head -1 Pkgfile | sed 's/# Description: //g')
+homepage=$(grep URL Pkgfile | sed 's/# URL: //g')
+dependencies=$(grep 'Depends on' Pkgfile | sed 's/# Depends on: //g')
 
 fn_show_info() {
-    ddist="\\033[15G"
-    echo -e $Green'Name:'  $ddist${Color_Off}$name
-    echo -e $Green'Version:'    $ddist${Color_Off}$version
-    echo -e $Green'Release:'    $ddist${Color_Off}$release
-    echo -e $Green'Description:'  $ddist${Color_Off}$description
-    echo -e $Green'Source URL:'  $ddist${Color_Off}$source
+    ddist="\\033[13G"
+    echo -e $Green'Name'  $ddist${Color_Off}: $name
+    echo -e $Green'Version'    $ddist${Color_Off}: $version
+    echo -e $Green'Release'    $ddist${Color_Off}: $release
+    echo -e $Green'Description'  $ddist${Color_Off}: $description
+    echo -e $Green'URL'  $ddist${Color_Off}: $homepage
+    echo -e $Green'Depends on'  $ddist${Color_Off}: $dependencies
 }
 
 fn_show_info
