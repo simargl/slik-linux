@@ -3,19 +3,22 @@
 # Universal Slackware Package Builder
 
 # Define color variables
-RESET="\033[0m"
-GREEN="\033[32m"     # Success messages
-YELLOW="\033[33m"    # Warnings
-RED="\033[31m"       # Error messages
-BLUE="\033[34m"      # General status messages
-CYAN="\033[36m"      # Download/Extract status messages
+Black='\e[0;30m'        # Black
+Red='\e[0;31m'          # Red
+Green='\e[0;32m'        # Green
+Yellow='\e[0;33m'       # Yellow
+Blue='\e[0;34m'         # Blue
+Purple='\e[0;35m'       # Purple
+Cyan='\e[0;36m'         # Cyan
+White='\e[0;37m'        # White
+Color_Off='\e[0m'       # Text Reset
 
 # Define the STARTDIR (where Pkgfile is located)
 STARTDIR="$(pwd)"
 
 # Check for the Pkgfile
 if [ ! -f "$STARTDIR/Pkgfile" ]; then
-    echo -e "${RED}Error: Pkgfile not found in the current directory.${RESET}"
+    echo -e "${Red}Error: Pkgfile not found in the current directory.${Color_Off}"
     exit 1
 fi
 
@@ -24,64 +27,52 @@ PKG="${STARTDIR}/PKG"
 OUTPUT="${STARTDIR}/OUTPUT"
 mkdir -p "$SRC" "$PKG" "$OUTPUT"
 
-fn_replace_in_pkgfile_configure() {
-    sed -i 's|./configure|./configure --build=x86_64-slackware-linux --host=x86_64-slackware-linux|' "$1"
-}
-
-fn_restore_in_pkgfile_configure() {
-    sed -i 's|./configure --build=x86_64-slackware-linux --host=x86_64-slackware-linux|./configure|' "$1"
-}
-
-echo -e "${BLUE}Cleaning up...${RESET}"
 rm -rf "$PKG"
 rm -rf "$SRC"/*
-fn_replace_in_pkgfile_configure "$STARTDIR/Pkgfile"
+
 source "$STARTDIR/Pkgfile"
 description=$(head -1 Pkgfile | sed 's/# Description: //g')
 
-# Function to wrap the description at 70 characters
-wrap_description() {
-    local desc="$1"
-    local wrapped=""
-    local line
-    while [ -n "$desc" ]; do
-        line=$(echo "$desc" | cut -c1-70)
-        wrapped="$wrapped$name: $line\n"
-        desc="${desc#$line}"
-    done
-    echo -e "$wrapped"
+fn_show_info() {
+    ddist="\\033[15G"
+    echo -e $Green'Name:'  $ddist${Color_Off}$name
+    echo -e $Green'Version:'    $ddist${Color_Off}$version
+    echo -e $Green'Release:'    $ddist${Color_Off}$release
+    echo -e $Green'Description:'  $ddist${Color_Off}$description
+    echo -e $Green'Source URL:'  $ddist${Color_Off}$source
 }
 
+fn_show_info
+
 # Handle files listed in the source array
-echo -e "${BLUE}Checking source files...${RESET}"
+echo -e "${Blue}Checking source files...${Color_Off}"
 for src in "${source[@]}"; do
     if [ -f "$STARTDIR/$src" ]; then
-        echo -e "${CYAN}Copying $src to SRC directory...${RESET}"
         cp "$STARTDIR/$src" "$SRC/"
     fi
 done
 
 # Handle downloading and extracting source files (only archives)
-echo -e "${BLUE}Downloading and extracting source...${RESET}"
+echo -e "${Blue}Downloading and extracting source...${Color_Off}"
 for url in "${source[@]}"; do
     file=$(basename "$url")
     if [[ "$file" =~ \.tar\.gz$ || "$file" =~ \.tar\.xz$ || "$file" =~ \.tar\.bz2$ ]]; then
         if [ ! -f "$SRC/$file" ]; then
-            echo -e "${CYAN}Downloading $file...${RESET}"
-            wget -q "$url" -P "$SRC" || { echo -e "${RED}Error: Failed to download $file${RESET}"; exit 1; }
+            echo -e "${Cyan}Downloading $file...${Color_Off}"
+            wget -q "$url" -P "$SRC" || { echo -e "${Red}Error: Failed to download $file${Color_Off}"; exit 1; }
         fi
-        echo -e "${CYAN}Extracting $file...${RESET}"
-        tar -xf "$SRC/$file" -C "$SRC" || { echo -e "${RED}Error: Failed to extract $file${RESET}"; exit 1; }
+        echo -e "${Cyan}Extracting $file...${Color_Off}"
+        tar -xf "$SRC/$file" -C "$SRC" || { echo -e "${Red}Error: Failed to extract $file${Color_Off}"; exit 1; }
     fi
 done
 
 # Run the build function starting from SRC
-echo -e "${BLUE}Running the build function in $SRC...${RESET}"
+echo -e "${Blue}Running the build function in $SRC...${Color_Off}"
 cd "$SRC" || exit 1
-build || { echo -e "${RED}Error: Build function failed.${RESET}"; fn_restore_in_pkgfile_configure "$STARTDIR/Pkgfile" && exit 1; }
+build || { echo -e "${Red}Error: Build function failed.${Color_Off}"; exit 1; }
 
 # Organize for Slackware
-echo -e "${BLUE}Organizing files for Slackware package...${RESET}"
+echo -e "${Blue}Organizing files for Slackware package...${Color_Off}"
 mkdir -p "$PKG/install"
 cat <<EOF >"$PKG/install/slack-desc"
 # HOW TO EDIT THIS FILE:
@@ -89,14 +80,13 @@ cat <<EOF >"$PKG/install/slack-desc"
 #
 # Package: $name
 #
-$(wrap_description "$description")
 $name: 
-$name: This package was built using a universal Pkgfile for Slackware.
+$name: $description
 $name: 
 EOF
 
 # Clean package
-echo -e "${BLUE}Cleaning package...${RESET}"
+echo -e "${Blue}Cleaning package...${Color_Off}"
 for dir in "$PKG"/bin "$PKG"/sbin "$PKG"/usr/bin "$PKG"/usr/sbin; do
     if [ -d $dir ]; then
         find $dir -type f -exec strip '{}' > /dev/null 2>&1 \;
@@ -114,15 +104,14 @@ if [ -d "$PKG"/usr/share/man ]; then rm -rf "$PKG"/usr/share/man; fi
 if [ -d "$PKG"/usr/share/info ]; then rm -rf "$PKG"/usr/share/info; fi
 if [ -d "$PKG"/usr/share/gnome/help ]; then rm -rf "$PKG"/usr/share/gnome/help; fi
 if [ -d "$PKG"/usr/share/help ]; then rm -rf "$PKG"/usr/share/help; fi
-if [ -f "$PKG"/usr/lib/locale ]; then rm -rf "$PKG"/usr/lib/locale; fi
 
 # Create Slackware package
-echo -e "${BLUE}Creating Slackware package...${RESET}"
+echo -e "${Blue}Creating Slackware package...${Color_Off}"
 ARCH=$(uname -m)
 PACKAGE_NAME="${name}-${version}-${ARCH}-${release}.txz"
 cd "$PKG" || exit 1
 makepkg -l y -c n "${OUTPUT}/${PACKAGE_NAME}" || {
-    echo -e "${RED}Error: Failed to create Slackware package.${RESET}"
+    echo -e "${Red}Error: Failed to create Slackware package.${Color_Off}"
     exit 1
 }
 
@@ -130,9 +119,6 @@ makepkg -l y -c n "${OUTPUT}/${PACKAGE_NAME}" || {
 PACKAGE_SIZE=$(du -sh "${OUTPUT}/${PACKAGE_NAME}" | cut -f1)
 INSTALLED_SIZE=$(du -sh "$PKG" | cut -f1)
 
-echo -e "${GREEN}Slackware package created: ${OUTPUT}/${PACKAGE_NAME}${RESET}"
-echo -e "${BLUE}Package size: ${PACKAGE_SIZE}${RESET}"
-echo -e "${BLUE}Installed size: ${INSTALLED_SIZE}${RESET}"
-
-# restore Pkgfile
-fn_restore_in_pkgfile_configure "$STARTDIR/Pkgfile"
+echo -e "${Green}Slackware package created: ${OUTPUT}/${PACKAGE_NAME}${Color_Off}"
+echo -e "${Blue}Package size: ${PACKAGE_SIZE}${Color_Off}"
+echo -e "${Blue}Installed size: ${INSTALLED_SIZE}${Color_Off}"

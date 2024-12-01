@@ -7,7 +7,8 @@ name=openbox
 version=3.6.1
 release=1
 source=(http://openbox.org/dist/openbox/openbox-$version.tar.gz
-        http://http.debian.net/debian/pool/main/o/openbox/openbox_3.6.1-12.debian.tar.xz)
+        http://http.debian.net/debian/pool/main/o/openbox/openbox_3.6.1-12.debian.tar.xz
+        openbox-window-snap.diff.gz)
 
 build() {
     cd $name-$version
@@ -15,6 +16,8 @@ build() {
         echo Applying $i ...
         patch -p1 -i ../debian/patches/$i
     done
+    gunzip ../openbox-window-snap.diff.gz
+    patch -p1 -i ../openbox-window-snap.diff
     autoreconf -vfi
     ./configure \
         --prefix=/usr \
