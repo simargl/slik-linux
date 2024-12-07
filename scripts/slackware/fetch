@@ -46,11 +46,15 @@ fn_repo_update() {
 
 extract_package_info() {
     local url="$1"
-    nv=$(basename "$url" | sed 's/\(.*\)-[^-]*-[^-]*$/\1/')
-    n="$(echo "$nv" | sed 's/-[^-]*$//')"
-    v="$(echo "$nv" | sed 's/.*-//')"
-    r="$(echo ${url##*-} | sed 's/.t.z//')"
-    echo "$n|$v|$r|$url"
+    local filename="${url##*/}"
+    local base="${filename%.t?z}"
+    local release="${base##*-}"
+    local temp="${base%-*}"
+    local arch="${temp##*-}"
+    temp="${temp%-*}"
+    local version="${temp##*-}"
+    local name="${temp%-*}"
+    echo "$name|$version|$release|$url"
 }
 
 fn_pkg_search() {
