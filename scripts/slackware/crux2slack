@@ -78,12 +78,7 @@ build || { echo -e "${Red}Error: Build function failed.${Color_Off}"; exit 1; }
 echo -e "${Blue}Organizing files for Slackware package...${Color_Off}"
 mkdir -p "$PKG/install"
 cat <<EOF >"$PKG/install/slack-desc"
-# HOW TO EDIT THIS FILE:
-# See "man 5 slack-desc" for details.
-#
-# Package: $name
-#
-$name: 
+       |-----handy-ruler------------------------------------------------------|
 $name: $description
 $name: 
 EOF
