@@ -3,9 +3,12 @@
 # Author: simargl <https://github.com/simargl>
 # License: GPL v3
 
+. ./config
+fn_prepare_output_dir
+
 STARTDIR="/tmp"
-OUTPUTDIR="/tmp/output"
-SCRIPTSDIR="scripts/slackware"
+OUTPUTDIR="$PWD/output/iso/$SYSNAME/modules"
+SCRIPTSDIR="scripts/test/slackware"
 
 fn_download_and_extract() {
     install -Dm755 $SCRIPTSDIR/{fetch,crux2slack} /usr/bin/
@@ -56,8 +59,9 @@ fn_build_rootfs() {
     rm -r $STARTDIR/root.x86_64/usr/share/{doc,libwacom,samba,vulkan}
     rm -r $STARTDIR/root.x86_64/usr/lib64/{d3d,gallium-pipe,libdxcompiler.so,libRusticl*,libVkLayer*,liblldb*}
     rm -r $STARTDIR/root.x86_64/usr/libexec/samba
-    # usr bin files
+    rm -r $STARTDIR/root.x86_64/usr/bin/{smbtorture,gfxrecon*,dwp,gtk3-demo}
     chroot /tmp/root.x86_64 /bin/bash -c 'find /usr/bin -type f -exec sh -c '\''if ldd "$1" 2>&1 | grep -q "not found"; then rm "$1"; fi'\'' _ {} \;'
+    chroot /tmp/root.x86_64 /bin/bash -c 'find /usr/libexec -type f -exec sh -c '\''if ldd "$1" 2>&1 | grep -q "not found"; then rm "$1"; fi'\'' _ {} \;'
     # python cleanup
     find $STARTDIR/root.x86_64 -type f -name "*.pyc" -delete
     find $STARTDIR/root.x86_64 -type f -name "*.pyo" -delete
