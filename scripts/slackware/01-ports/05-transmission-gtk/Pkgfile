@@ -4,15 +4,13 @@
 # Depends on: curl gtkmm3 libevent
 
 name=transmission-gtk
-version=4.0.6
+version=4.1.0-beta.1
+_gitver=4.1.0-beta.1+rc3a8106077
 release=1
-source=(https://github.com/transmission/transmission/releases/download/$version/transmission-$version.tar.xz
-	miniupnp.patch)
+source=(https://github.com/transmission/transmission/releases/download/$version/transmission-${_gitver}.tar.xz)
 
 build() {
-	patch -d transmission-$version -p1 -i $SRC/miniupnp.patch
-
-	cmake -S transmission-$version -B build -G Ninja \
+	cmake -S transmission-${_gitver} -B build -G Ninja \
 		-D CMAKE_BUILD_TYPE=Release \
 		-D CMAKE_INSTALL_PREFIX=/usr \
 		-D RUN_CLANG_TIDY=OFF \
