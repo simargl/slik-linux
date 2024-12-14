@@ -4,19 +4,22 @@
 # License: GPL v3
 
 # Define colors and variables
+
+VERSION="current"
+MAIN_MIRROR="https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-$VERSION"
+OTHER_MIRRORS=( 'https://github.com/simargl/slik-linux/releases/download/slackware-current-01'
+                'https://github.com/simargl/slik-linux/releases/download/slackware-current-02'
+                'https://github.com/simargl/slik-linux/releases/download/slackware-current-03')
+
+DBPATH="/var/lib/slackware"
+CACHEDIR="/var/cache/slackware"
+
 GREEN='\033[0;32m'
 YELLOW='\033[0;33m'
 RED='\033[0;31m'
 CYAN='\033[0;36m'
+BWHITE='\033[1m'
 RESET='\033[0m'
-DBPATH="/var/lib/slackware"
-CACHEDIR="/var/cache/slackware"
-REPOSITORY=('https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-current/patches'
-            'https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-current/slackware64'
-            'https://quantum-mirror.hu/mirrors/pub/slackware/slackware64-current/extra'
-            'https://github.com/simargl/slik-linux/releases/download/slackware-current-01'
-            'https://github.com/simargl/slik-linux/releases/download/slackware-current-02'
-            'https://github.com/simargl/slik-linux/releases/download/slackware-current-03')
 
 # Root check      
 if [[ $EUID -ne 0 ]]; then
@@ -33,51 +36,99 @@ fn_download_file() {
 fn_repo_update() {
     [ -f "$DBPATH/packages.db" ] && rm "$DBPATH/packages.db"
     printf "Synchronizing package databases...\n"
-    for ((i=0; i<${#REPOSITORY[@]}; ++i)); do
-        fn_download_file "${REPOSITORY[i]}/CHECKSUMS.md5" "$DBPATH" "${REPOSITORY[i]}"
-        cd "$DBPATH" || exit
-        grep -E '\.tgz$|\.txz$' CHECKSUMS.md5 | cut -c 36- | sed "s|^|${REPOSITORY[i]}|g" | sort | while IFS= read -r line; do
-            extract_package_info "$line" >> "$DBPATH/packages.db"
-        done
-        rm CHECKSUMS.md5*
+    for i in extra patches; do 
+        fn_download_file "$MAIN_MIRROR/$i/PACKAGES.TXT" "$DBPATH" "$MAIN_MIRROR/$i"
+        cd $DBPATH || exit
+        extract_package_info "$MAIN_MIRROR" "PACKAGES.TXT" >> "$DBPATH/packages.db"; rm PACKAGES.*
     done
-    printf "Repositories: %d Packages: %d\n" "${#REPOSITORY[@]}" "$(grep -c ^ "$DBPATH/packages.db")"
+    fn_download_file "$MAIN_MIRROR/PACKAGES.TXT" "$DBPATH" "$MAIN_MIRROR"
+    extract_package_info "$MAIN_MIRROR" "PACKAGES.TXT" >> "$DBPATH/packages.db"; rm PACKAGES.*
+    for ((i=0; i<${#OTHER_MIRRORS[@]}; ++i)); do
+        fn_download_file "${OTHER_MIRRORS[i]}/PACKAGES.TXT" "$DBPATH" "${OTHER_MIRRORS[i]}"
+        extract_package_info "${OTHER_MIRRORS[i]}" "PACKAGES.TXT" >> "$DBPATH/packages.db"; rm PACKAGES.*
+    done
+    printf "Packages: %d\n" "$(grep -c ^ "$DBPATH/packages.db")"
 }
 
 extract_package_info() {
-    local url="$1"
-    local filename="${url##*/}"
-    local base="${filename%.t?z}"
-    local release="${base##*-}"
-    local temp="${base%-*}"
-    local arch="${temp##*-}"
-    temp="${temp%-*}"
-    local version="${temp##*-}"
-    local name="${temp%-*}"
-    echo "$name|$version|$release|$url"
+awk -v mirror="$1" '
+BEGIN {
+    FS=": "; OFS="|";
+    url = ""; description = "";
+}
+
+/^PACKAGE NAME:/ {
+    package_name = $2;
+    gsub(/^[ \t]+|[ \t]+$/, "", package_name);
+}
+
+/^PACKAGE LOCATION:/ {
+    gsub(/^[ \t]+|[ \t]+$/, "", $2);
+    gsub(/^\./, "", $2);
+    url = mirror "/" $2 "/" package_name;
+}
+
+/^PACKAGE DESCRIPTION:/ {
+    getline;
+    description = $0;
+    sub(/^.*: /, "", description);
+}
+
+/^$/ {
+    if (package_name != "" && url != "") {
+        print url, description;
+    }
+    url = ""; description = "";
+}
+
+END {
+    if (package_name != "" && url != "") {
+        print url, description;
+    }
+}' $2
+}
+
+fn_pkg_search_print_out() {
+    e_url="$1"
+    e_filename="${e_url##*/}"
+    e_base="${e_filename%.t?z}"
+    e_release="${e_base##*-}"
+    e_temp="${e_base%-*}"
+    e_arch="${e_temp##*-}"
+    e_temp="${e_temp%-*}"
+    e_version="${e_temp##*-}"
+    e_name="${e_temp%-*}"
+    e_desc="$(echo $2 | sed "s/$e_name //g")"
+    if [ -d "/var/lib/slackware/installed/$e_name" ]; then
+        status="Installed"
+    else
+        status="Not installed"
+    fi
+    printf "%-s $YELLOW%-s-%-s$RESET [%s]\n" "$e_name" "$e_version" "$e_release" "$status"
+    e_desc_no_braces=$(echo "$e_desc" | sed 's/[()]//g')
+    printf "     %-s\n" "$e_desc_no_braces"
 }
 
 fn_pkg_search() {
     if [[ $ARG ]]; then
-        PKGSEARCH=$(grep "$ARG" "$DBPATH/packages.db")
+        PKGSEARCH=$(grep -i "$ARG" "$DBPATH/packages.db")
         if [[ "$PKGSEARCH" != "" ]]; then
             while read -r result; do
-                pkgnameR="$(echo "$result" | cut -d '|' -f1)"
-                pkgverR="$(echo "$result" | cut -d '|' -f2)"
-                pkgrelR="$(echo "$result" | cut -d '|' -f3)"
-                I="Not installed"
-                if [ -f "$DBPATH/installed/$pkgnameR/pkginfo" ]; then 
-                    source "$DBPATH/installed/$pkgnameR/pkginfo"
-                    if [ "$pkgverR-$pkgrelR" == "$pkgver-$pkgrel" ]; then I="Installed"; else I="Old ($pkgver-$pkgrel)"; fi
-                fi
-                printf "%-32s%-30s%s\n" "$pkgnameR" "($pkgverR-$pkgrelR)" "$I"
+                urlR="$(echo "$result" | cut -d '|' -f1)"     # Extract URL
+                descriptionR="$(echo "$result" | cut -d '|' -f2)"  # Extract description
+                fn_pkg_search_print_out "$urlR" "$descriptionR"
             done <<< "$PKGSEARCH"
+        else
+            echo "No results found for '$ARG'"
         fi
+    else
+        echo "Please provide a search term."
     fi
 }
 
 fn_get_pkgmatch() {
-    grep "^$1|" "$DBPATH/packages.db" | head -1
+    grep "/$1-[0-9]" "$DBPATH/packages.db" | head -1 | cut -d '|' -f1
+    
 }
 
 fn_check_pkgmatch_exists() {
@@ -101,10 +152,9 @@ fn_pkg_download() {
     if [ $ARG ]; then
         PKGMATCH=$(fn_get_pkgmatch "$ARG")
         if [[ "$PKGMATCH" != "" ]]; then
-            URL=$(echo $PKGMATCH | cut -d '|' -f4)
-            FILE=$(basename $URL)
+            FILE=$(basename $PKGMATCH)
             if [ ! -f "$CACHEDIR/$FILE" ]; then
-                fn_download_file "$URL" "$CACHEDIR" "$FILE"
+                fn_download_file "$PKGMATCH" "$CACHEDIR" "$FILE"
             fi
             if [ ! -f "$CACHEDIR/$FILE" ]; then
                 printf "${RED}%s download failed${RESET}\n" "$(basename "$PKGMATCH")"
