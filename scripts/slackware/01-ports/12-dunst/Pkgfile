@@ -1,4 +1,4 @@
-# Description: A lightweight replacement for the notification daemons provided by most desktop environments
+# Description: Lightweight and customizable notification daemon. 
 # URL: https://dunst-project.org/
 # Maintainer: Matt Housh, jaeger at crux dot ninja
 # Depends on: dbus gdk-pixbuf pango xorg-libxinerama xorg-libxrandr xorg-libxscrnsaver libnotify
