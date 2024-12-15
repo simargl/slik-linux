@@ -8,15 +8,16 @@ release=1
 source=(http://deb.debian.org/debian/pool/main/i/icewm/icewm_${version}.orig.tar.xz)
 
 build() {
-	cd $name-$version
+    fetch it imlib2
+    cd $name-$version
     sed s'|doc||'g -i Makefile.am
     sed s'|doc/Makefile||'g -i configure.ac
-	./autogen.sh
+    ./autogen.sh
     ./configure \
-		--prefix=/usr \
-		--sysconfdir=/etc \
-		--mandir=/usr/share/man \
+        --prefix=/usr \
+        --sysconfdir=/etc \
+        --mandir=/usr/share/man \
         --disable-i18n \
         --disable-nls
-	make DESTDIR=$PKG install
+    make DESTDIR=$PKG install
 }
