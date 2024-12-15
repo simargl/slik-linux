@@ -1,6 +1,6 @@
 # Description:	a window manager for the X Window System. 
 # URL:		https://ice-wm.org/
-# Depends on:	imlib2
+# Depends on: imlib2
 
 name=icewm
 version=3.6.0
@@ -8,7 +8,6 @@ release=1
 source=(http://deb.debian.org/debian/pool/main/i/icewm/icewm_${version}.orig.tar.xz)
 
 build() {
-    fetch it imlib2
     cd $name-$version
     sed s'|doc||'g -i Makefile.am
     sed s'|doc/Makefile||'g -i configure.ac
