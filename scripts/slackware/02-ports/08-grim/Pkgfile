@@ -1,7 +1,7 @@
 # Description: Screenshot utility for Wayland
 # URL: https://wayland.emersion.fr/grim/
 # Maintainer: Tim Biermann, tbier at posteo dot de
-# Depends on: pango wayland-protocols
+# Depends on: 
 # Optional: libjpeg-turbo scdoc
 
 name=grim

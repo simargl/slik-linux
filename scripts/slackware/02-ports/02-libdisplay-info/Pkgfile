@@ -1,7 +1,7 @@
 # Description: EDID and DisplayID library
 # URL: https://gitlab.freedesktop.org/emersion/libdisplay-info
 # Maintainer: Tim Biermann, tbier at posteo dot de
-# Depends on: hwdata
+# Depends on: 
 
 name=libdisplay-info
 version=0.2.0

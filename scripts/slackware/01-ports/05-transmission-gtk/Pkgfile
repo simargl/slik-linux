@@ -1,7 +1,7 @@
 # Description: BitTorrent client with gtk3 user interface
 # URL: https://transmissionbt.com/
 # Maintainer: Juergen Daubert, jue at crux dot nu
-# Depends on: curl gtkmm3 libevent
+# Depends on:
 
 name=transmission-gtk
 version=4.1.0

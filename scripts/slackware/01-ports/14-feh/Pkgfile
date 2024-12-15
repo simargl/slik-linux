@@ -1,7 +1,7 @@
 # Description: A fast and light image viewer
 # URL: https://feh.finalrewind.org/
 # Maintainer: Matt Housh, jaeger at crux dot ninja
-# Depends on: imlib2 xorg-libxinerama xorg-libxt
+# Depends on: 
 
 name=feh
 version=3.10.3

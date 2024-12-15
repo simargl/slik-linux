@@ -1,7 +1,7 @@
 # Description: a notification daemon for wayland
 # URL: https://github.com/emersion/mako
 # Maintainer: Tim Biermann, tbier at posteo dot de
-# Depends on: basu pango wayland-protocols
+# Depends on: 
 
 name=mako
 version=1.9.0

@@ -1,7 +1,7 @@
 # Description: adds PDF support to zathura by using the poppler rendering engine
 # URL:  http://pwmt.org/projects/zathura-pdf-poppler/
 # Maintainer:  John McQuah, jmcquah at disroot dot org
-# Depends on:  glib poppler zathura
+# Depends on:
 
 name=zathura-pdf-poppler
 version=0.3.3

@@ -1,7 +1,7 @@
 # Description: Fast, lightweight, standards-compliant window manager
 # URL: http://openbox.org
 # Maintainer: CRUX System Team, core-ports at crux dot nu
-# Depends on: libxml2 pango xorg-libxinerama xorg-libxrandr
+# Depends on: 
 
 name=openbox
 version=3.6.1

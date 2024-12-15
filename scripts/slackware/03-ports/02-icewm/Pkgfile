@@ -1,5 +1,6 @@
-# Description:	a window manager for the X Window System. 
-# URL:		https://ice-wm.org/
+# Description: a window manager for the X Window System. 
+# URL: https://ice-wm.org/
+# Maintainer: https://github.com/simargl/slik-linux
 # Depends on: imlib2
 
 name=icewm

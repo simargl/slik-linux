@@ -1,7 +1,7 @@
 # Description: Enables change of themes, icons, and fonts used by applications easily. 
 # URL: https://wiki.lxde.org/en/LXAppearance
 # Maintainer: ax, ax at slackware dot eu
-# Depends on: gtk
+# Depends on: 
 
 name=lxappearance
 version=0.6.3

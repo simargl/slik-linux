@@ -1,7 +1,7 @@
 # Description: Lightweight panel/taskbar.
 # URL: https://gitlab.com/nick87720z/tint2
 # Maintainer: John McQuah, jmcquah at disroot dot org
-# Depends on: imlib2 librsvg startup-notification xorg-libxcomposite xorg-libxdamage xorg-libxinerama xorg-libxrandr
+# Depends on: 
 
 name=tint2
 version=17.0.1

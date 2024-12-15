@@ -1,7 +1,7 @@
 # Description: A Wayland window-stacking compositor
 # URL: https://github.com/labwc/labwc
 # Maintainer: Jay Lanagan, j at lngn dot net
-# Depends on: librsvg libsfdo wlroots xorg-xwayland scdoc
+# Depends on: 
 
 name=labwc
 version=0.8.1

@@ -1,7 +1,7 @@
 # Description: CLI program to access YouTub and other data content
 # URL: https://github.com/yt-dlp/yt-dlp
 # Maintainer: Steffen Nurpmeso, steffen at sdaoden dot eu
-# Depends on: python3-setuptools
+# Depends on: 
 
 name=yt-dlp
 version=2024.11.18

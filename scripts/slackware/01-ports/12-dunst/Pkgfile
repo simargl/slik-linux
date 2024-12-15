@@ -1,7 +1,7 @@
 # Description: Lightweight and customizable notification daemon. 
 # URL: https://dunst-project.org/
 # Maintainer: Matt Housh, jaeger at crux dot ninja
-# Depends on: dbus gdk-pixbuf pango xorg-libxinerama xorg-libxrandr xorg-libxscrnsaver libnotify
+# Depends on: 
 
 name=dunst
 version=1.12.0

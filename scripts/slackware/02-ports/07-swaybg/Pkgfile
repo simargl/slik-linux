@@ -1,7 +1,7 @@
 # Description: Wallpaper tool for Wayland compositors
 # URL: https://github.com/swaywm/swaybg
 # Maintainer: Tim Biermann, tbier at posteo dot de
-# Depends on: cairo wayland-protocols
+# Depends on: 
 # Optional: gdk-pixbuf
 
 name=swaybg

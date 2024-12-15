@@ -1,7 +1,7 @@
 # Description: Customisable Wayland bar for wlroots-based compositors
 # URL: https://github.com/alexays/waybar
 # Maintainer: poq <jbloomfield at live dot com>
-# Depends on: gtkmm3 jsoncpp wayland fmt spdlog gobject-introspection pulseaudio libnl libayatana-appindicator ayatana-ido libayatana-indicator libmpdclient libdbusmenu-gtk3 wayland-protocols meson
+# Depends on: 
 
 name=waybar
 version=0.11.0
