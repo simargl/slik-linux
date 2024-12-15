@@ -1,0 +1,22 @@
+# Description:	a window manager for the X Window System. 
+# URL:		https://ice-wm.org/
+# Depends on:	xorg-libxinerama xorg-libxmu xorg-libxpm
+
+name=icewm
+version=3.6.0
+release=1
+source=(http://deb.debian.org/debian/pool/main/i/icewm/icewm_${version}.orig.tar.xz)
+
+build() {
+	cd $name-$version
+    sed s'|doc||'g -i Makefile.am
+    sed s'|doc/Makefile||'g -i configure.ac
+	./autogen.sh
+    ./configure \
+		--prefix=/usr \
+		--sysconfdir=/etc \
+		--mandir=/usr/share/man \
+        --disable-i18n \
+        --disable-nls
+	make DESTDIR=$PKG install
+}
