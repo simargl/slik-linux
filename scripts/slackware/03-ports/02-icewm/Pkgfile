@@ -1,6 +1,6 @@
 # Description:	a window manager for the X Window System. 
 # URL:		https://ice-wm.org/
-# Depends on:	xorg-libxinerama xorg-libxmu xorg-libxpm
+# Depends on:	imlib2
 
 name=icewm
 version=3.6.0
