@@ -5,7 +5,7 @@
 # Optional:     check texlive intltool libseccomp doxygen docutils sqlite3
 
 name=zathura
-version=0.5.8
+version=0.5.11
 release=1
 source=(https://pwmt.org/projects/$name/download/$name-$version.tar.xz)
 
