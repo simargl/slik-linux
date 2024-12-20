@@ -1,7 +1,7 @@
 # Description: Customisable Wayland bar for wlroots-based compositors
 # URL: https://github.com/alexays/waybar
 # Maintainer: poq <jbloomfield at live dot com>
-# Depends on: 
+# Depends on: seatd libdisplay-info wlroots labwc
 
 name=waybar
 version=0.11.0

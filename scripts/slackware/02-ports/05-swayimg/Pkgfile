@@ -1,7 +1,7 @@
 # Description: Image viewer for Wayland
 # URL: https://github.com/artemsen/swayimg
 # Maintainer: https://github.com/simargl/slik-linux
-# Depends on: 
+# Depends on: seatd libdisplay-info wlroots labwc
 # Optional: 
 
 name=swayimg

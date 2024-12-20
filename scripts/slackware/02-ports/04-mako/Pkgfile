@@ -1,7 +1,7 @@
 # Description: a notification daemon for wayland
 # URL: https://github.com/emersion/mako
 # Maintainer: Tim Biermann, tbier at posteo dot de
-# Depends on: 
+# Depends on: seatd libdisplay-info wlroots labwc
 
 name=mako
 version=1.9.0
