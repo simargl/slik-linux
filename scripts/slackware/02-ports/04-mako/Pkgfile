@@ -1,0 +1,21 @@
+# Description: a notification daemon for wayland
+# URL: https://github.com/emersion/mako
+# Maintainer: Tim Biermann, tbier at posteo dot de
+# Depends on: 
+
+name=mako
+version=1.9.0
+release=1
+source=(https://github.com/emersion/mako/archive/v$version/$name-$version.tar.gz)
+
+build() {
+  meson setup $name-$version build \
+    --prefix=/usr \
+    --buildtype=plain \
+    --wrap-mode nodownload \
+    -D b_lto=true \
+    -D b_pie=true
+
+  meson compile -C build
+  DESTDIR=$PKG meson install -C build
+}
