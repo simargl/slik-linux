@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Name=Packages
+Comment=Fetch GUI Package Manager
+Exec=fetch-gui.py
+Icon=package-x-generic
+Terminal=false
+Categories=GTK;System;
+StartupNotify=false
