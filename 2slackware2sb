@@ -57,7 +57,7 @@ fn_build_rootfs() {
     rm -r $STARTDIR/root.x86_64/usr/share/{doc,libwacom,samba,vulkan}
     rm -r $STARTDIR/root.x86_64/usr/lib64/{d3d,gallium-pipe,libdxcompiler.so,libRusticl*,libVkLayer*,liblldb*}
     rm -r $STARTDIR/root.x86_64/usr/libexec/samba
-    rm -r $STARTDIR/root.x86_64/usr/bin/{smbtorture,gfxrecon*,dwp,gtk3-demo}
+    rm -r $STARTDIR/root.x86_64/usr/bin/{smbtorture,gfxrecon*,dwp,gtk3-demo*}
     chroot /tmp/root.x86_64 /bin/bash -c 'find /usr/bin -type f -exec sh -c '\''if ldd "$1" 2>&1 | grep -q "not found"; then rm "$1"; fi'\'' _ {} \;'
     chroot /tmp/root.x86_64 /bin/bash -c 'find /usr/libexec -type f -exec sh -c '\''if ldd "$1" 2>&1 | grep -q "not found"; then rm "$1"; fi'\'' _ {} \;'
     # python cleanup
