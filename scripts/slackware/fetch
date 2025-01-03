@@ -100,13 +100,18 @@ fn_pkg_search_print_out() {
     e_name="${e_temp%-*}"
     e_desc="$(echo $2 | sed "s/$e_name //g")"
     if [ -d "/var/lib/slackware/installed/$e_name" ]; then
-        status="Installed"
+        source "/var/lib/slackware/installed/$e_name/pkginfo"
+        if [ $pkgver == $e_version ]; then
+            status="Installed"
+        else
+            status="Outdated"
+        fi
     else
         status="Not installed"
     fi
     printf "%-s $YELLOW%-s-%-s$RESET [%s]\n" "$e_name" "$e_version" "$e_release" "$status"
     e_desc_no_braces=$(echo "$e_desc" | sed 's/[()]//g')
-    printf "     %-s\n" "$e_desc_no_braces"
+    printf "     %-s\n\n" "$e_desc_no_braces"
 }
 
 fn_pkg_search() {
