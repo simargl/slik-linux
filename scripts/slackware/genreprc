@@ -1,3 +1,0 @@
-REPOSROOT="$PWD/slackware"
-REPOSOWNER="simargl <https://github.com/simargl>"
-RSS="no"
