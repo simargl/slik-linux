@@ -20,14 +20,14 @@ jobs:
         sudo apt-get install -y gh jq
 
     - name: Create squashfs
-      run: sudo sh 2slackware2sb
+      run: sudo sh 2arch2sb
 
     - name: Remove old releases and tags
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
         repo_name="${{ github.event.repository.name }}"
-        version_prefix="${repo_name}-0.8.0-"
+        version_prefix="${repo_name}-0.1.0-"
         gh release list --limit 100 --json tagName -q '.[].tagName' | grep "^${version_prefix}" | while read -r tag; do
           gh release delete "$tag" --yes --cleanup-tag 
         done
@@ -36,4 +36,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh release create "${{ github.event.repository.name }}-0.8.0-${{ github.run_number }}" "/tmp/output/fs-slackware.sb"
+        gh release create "${{ github.event.repository.name }}-0.1.0-${{ github.run_number }}" "/tmp/output/fs-slackware.sb"
