@@ -55,7 +55,7 @@ fn_build_and_compress() {
     # compress
     if [ ! -d $OUTPUTDIR ]; then mkdir -p $OUTPUTDIR; fi
     if [ -f $OUTPUTDIR/fs-arch.sb ]; then rm $OUTPUTDIR/fs-arch.sb; fi
-    mksquashfs root.x86_64/ $OUTPUTDIR/fs-arch.sb -comp xz -b 1024k
+    mksquashfs root.x86_64/ $OUTPUTDIR/fs-arch.sb -comp gzip -b 1024k
 }
 
 fn_download_and_extract
