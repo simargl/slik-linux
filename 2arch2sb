@@ -42,6 +42,7 @@ fn_build_and_compress() {
     # cache
     rm -r $STARTDIR/root.x86_64/usr/share/mime/globs
     rm -r $STARTDIR/root.x86_64/usr/share/icons/hicolor/icon-theme.cache
+    rm -r $STARTDIR/root.x86_64/usr/share/icons/Adwaita/icon-theme.cache
     rm -r $STARTDIR/root.x86_64/usr/share/glib-2.0/schemas/gschemas.compiled
     # other
     rm -r $STARTDIR/root.x86_64/usr/share/doc
