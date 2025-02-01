@@ -10,7 +10,7 @@ ROOTFS="archlinux-bootstrap-x86_64.tar.zst"
 fn_download_and_extract() {
     cd $STARTDIR
     if [ ! -f $ROOTFS ]; then
-        wget https://mirror.alwyzon.net/archlinux/iso/2025.01.01/$ROOTFS
+        wget https://mirror.alwyzon.net/archlinux/iso/2025.02.01/$ROOTFS
     fi
     if [ -d root.x86_64 ]; then rm -r root.x86_64; fi
     bsdtar -xf $ROOTFS
