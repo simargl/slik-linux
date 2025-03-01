@@ -35,8 +35,8 @@ fn_build_and_compress() {
     lshw openbox zathura-pdf-poppler redshift tint2 dunst conky feh gmrun \
     lxappearance-gtk3 obconf xorg-server xorg-xinit xcompmgr ttf-font-awesome \
     libnotify fuse2 geany pcre android-tools mpv openh264 yt-dlp libxslt \
-    mpg123 dhcpcd rsync base-devel sdl2_image expac less inetutils nemo \
-    nemo-fileroller --noconfirm"
+    mpg123 dhcpcd rsync base-devel sdl2_image expac less inetutils pcmanfm-gtk3 \
+    file-roller gvfs --noconfirm"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "rm /var/cache/pacman/pkg/*"
     sed -i 's/geteuid/getppid/' $STARTDIR/root.x86_64/usr/bin/nemo
     # cache
