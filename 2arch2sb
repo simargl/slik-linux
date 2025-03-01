@@ -38,7 +38,7 @@ fn_build_and_compress() {
     mpg123 dhcpcd rsync base-devel sdl2_image expac less inetutils pcmanfm-gtk3 \
     file-roller gvfs --noconfirm"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "rm /var/cache/pacman/pkg/*"
-    sed -i 's/geteuid/getppid/' $STARTDIR/root.x86_64/usr/bin/nemo
+    sed -i 's/geteuid/getppid/' $STARTDIR/root.x86_64/usr/bin/pcmanfm
     # cache
     rm -r $STARTDIR/root.x86_64/usr/share/mime/globs
     rm -r $STARTDIR/root.x86_64/usr/share/icons/hicolor/icon-theme.cache
