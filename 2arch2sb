@@ -33,7 +33,7 @@ fn_build_and_compress() {
     dbus-glib librsvg syslinux xorriso cpio unrar unzip net-tools htop \
     xorg-mkfontscale ntfs-3g python-gobject webp-pixbuf-loader xdg-utils \
     lshw openbox zathura-pdf-poppler redshift tint2 dunst conky feh \
-    lxappearance-gtk3 xorg-server xorg-xinit xcompmgr ttf-font-awesome \
+    lxappearance-gtk3 xorg-server xorg-xinit xcompmgr \
     libnotify fuse2 geany pcre android-tools mpv openh264 yt-dlp libxslt \
     mpg123 dhcpcd rsync base-devel sdl2_image expac less inetutils pcmanfm-gtk3 \
     file-roller gvfs sassc --noconfirm"
