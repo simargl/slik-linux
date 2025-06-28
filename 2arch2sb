@@ -32,13 +32,13 @@ fn_build_and_compress() {
     libxv alsa-utils zathura-pdf-poppler git desktop-file-utils mesa \
     dbus-glib librsvg syslinux xorriso cpio unrar unzip net-tools htop \
     xorg-mkfontscale ntfs-3g python-gobject webp-pixbuf-loader xdg-utils \
-    lshw openbox zathura-pdf-poppler redshift tint2 dunst conky feh \
-    lxappearance-gtk3 xorg-server xorg-xinit xcompmgr \
+    lshw openbox zathura-pdf-poppler redshift dunst conky feh \
+    lxappearance-gtk3 xorg-server xorg-xinit picom \
     libnotify fuse2 geany pcre android-tools mpv openh264 yt-dlp libxslt \
-    mpg123 dhcpcd rsync base-devel sdl2_image expac less inetutils pcmanfm-gtk3 \
+    mpg123 dhcpcd rsync base-devel sdl2_image expac less inetutils thunar \
     file-roller gvfs sassc --noconfirm"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "rm /var/cache/pacman/pkg/*"
-    sed -i 's/geteuid/getppid/' $STARTDIR/root.x86_64/usr/bin/pcmanfm
+    sed -i 's/geteuid/getppid/' $STARTDIR/root.x86_64/usr/bin/thunar
     # cache
     rm -r $STARTDIR/root.x86_64/usr/share/mime/globs
     rm -r $STARTDIR/root.x86_64/usr/share/icons/hicolor/icon-theme.cache
