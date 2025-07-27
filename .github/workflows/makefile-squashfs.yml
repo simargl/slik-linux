@@ -20,7 +20,7 @@ jobs:
         sudo apt-get install -y gh jq libarchive-tools
 
     - name: Create squashfs
-      run: sudo sh 2arch2sb
+      run: sudo sh 2gentoo2sb
 
     - name: Remove old releases and tags
       env:
@@ -36,4 +36,4 @@ jobs:
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       run: |
-        gh release create "${{ github.event.repository.name }}-0.1.0-${{ github.run_number }}" "/tmp/output/fs-arch.sb"
+        gh release create "${{ github.event.repository.name }}-0.1.0-${{ github.run_number }}" "/tmp/output/fs-gentoo.sb"
