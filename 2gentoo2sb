@@ -29,6 +29,7 @@ fn_build_and_compress() {
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "eselect profile set 17"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge xorg-server xorg-apps xorg-drivers openbox"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge sakura feh"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge alsa-utils dhcpcd"
     # cache
     rm -r $STARTDIR/root.x86_64/usr/share/applications/mimeinfo.cache
     rm -r $STARTDIR/root.x86_64/usr/share/mime/globs*
