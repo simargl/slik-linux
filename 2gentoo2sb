@@ -26,7 +26,6 @@ fn_build_and_compress() {
     mount -t proc /proc root.x86_64/proc/
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge --sync"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge -uDN @world"
-    chroot $STARTDIR/root.x86_64/ /bin/bash -c "eselect profile set 17"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge xorg-server xorg-apps xorg-drivers openbox"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge sakura feh alsa-utils dhcpcd"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge app-misc/mc nss redshift"
