@@ -3,9 +3,6 @@
 # Author: simargl <https://github.com/simargl>
 # License: GPL v3
 
-. ./config
-fn_prepare_output_dir
-
 STARTDIR="/tmp"
 OUTPUTDIR="/tmp/output"
 ROOTFS="stage3-amd64-desktop-systemd-20250720T165240Z.tar.xz"
