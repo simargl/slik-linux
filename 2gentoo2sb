@@ -1,0 +1,57 @@
+#!/bin/bash
+# 
+# Author: simargl <https://github.com/simargl>
+# License: GPL v3
+
+. ./config
+fn_prepare_output_dir
+
+STARTDIR="/tmp"
+OUTPUTDIR="/tmp/output"
+ROOTFS="stage3-amd64-desktop-systemd-20250720T165240Z.tar.xz"
+
+fn_download_and_extract() {
+    cd $STARTDIR
+    if [ ! -f $ROOTFS ]; then
+        wget https://distfiles.gentoo.org/releases/amd64/autobuilds/20250720T165240Z/$ROOTFS
+    fi
+    if [ -d root.x86_64 ]; then rm -r root.x86_64; fi
+    mkdir root.x86_64
+    tar -xf $ROOTFS -C root.x86_64
+}
+
+fn_build_and_compress() {
+    # prepare
+    cd $STARTDIR
+    cp /etc/resolv.conf root.x86_64/etc/
+    mount --rbind /dev root.x86_64/dev/
+    mount --make-rslave root.x86_64/dev/
+    mount -t proc /proc root.x86_64/proc/
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge --sync"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge -uDN @world"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "eselect profile set 17"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge xorg-server xorg-apps xorg-drivers openbox"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge sakura feh"
+    # cache
+    rm -r $STARTDIR/root.x86_64/usr/share/applications/mimeinfo.cache
+    rm -r $STARTDIR/root.x86_64/usr/share/mime/globs*
+    rm -r $STARTDIR/root.x86_64/usr/share/icons/hicolor/icon-theme.cache
+    rm -r $STARTDIR/root.x86_64/usr/share/glib-2.0/schemas/gschemas.compiled
+    # other
+    rm -r $STARTDIR/root.x86_64/usr/lib/locale
+    rm -r $STARTDIR/root.x86_64/usr/share/doc
+    rm -r $STARTDIR/root.x86_64/usr/share/info
+    rm -r $STARTDIR/root.x86_64/usr/share/licenses
+    rm -r $STARTDIR/root.x86_64/usr/share/locale
+    rm -r $STARTDIR/root.x86_64/usr/share/man
+    find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs rm
+    # compress
+    if [ ! -d $OUTPUTDIR ]; then mkdir -p $OUTPUTDIR; fi
+    if [ -f $OUTPUTDIR/fs-gentoo.sb ]; then rm $OUTPUTDIR/fs-gentoo.sb; fi
+    mksquashfs root.x86_64/ $OUTPUTDIR/fs-gentoo.sb -comp gzip -b 1024k
+    umount -R root.x86_64/dev/
+    umount -R root.x86_64/proc/
+}
+
+fn_download_and_extract
+fn_build_and_compress
