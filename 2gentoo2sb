@@ -31,6 +31,7 @@ fn_build_and_compress() {
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge dev-lang/sassc htop nss redshift"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge media-video/mpv"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge sdl2-image openal dunst"
+    chroot $STARTDIR/root.x86_64/ /bin/bash -c "emerge x11-libs/vte dmenu"
     # cache
     rm -r $STARTDIR/root.x86_64/usr/share/applications/mimeinfo.cache
     rm -r $STARTDIR/root.x86_64/usr/share/mime/globs*
