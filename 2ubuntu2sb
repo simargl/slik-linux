@@ -5,8 +5,8 @@
 
 STARTDIR="/tmp"
 OUTPUTDIR="/tmp/output"
-ROOTFS="ubuntu-base-16.04.6-base-amd64.tar.gz"
-VERSION=$(echo "$ROOTFS" | awk -F'-' '{print $3}')     #16.04.6 20.04.5 24.04.3
+ROOTFS="ubuntu-base-18.04.5-base-amd64.tar.gz"
+VERSION=$(echo "$ROOTFS" | awk -F'-' '{print $3}')     #18.04.5 22.04.5 26.04
 
 fn_download_and_extract() {
     cd $STARTDIR
@@ -45,14 +45,12 @@ fn_build_rootfs() {
     xfonts-utils mpg123 libxslt1.1 at-spi2-core x11-xserver-utils lm-sensors \
     software-properties-common pciutils gvfs libgles2 libgtk-3-dev pkg-config \
     gir1.2-gtksource-3.0 python3-tk eject ffmpeg rofi adb xdotool wmctrl \
-    zstd libglu1-mesa usbutils fonts-dejavu-core pysassc nano compton libgl1-mesa-dev -y"
-    if [[ $VERSION != *16.04* ]]; then
-        chroot $STARTDIR/root.x86_64/ /bin/bash -c "export DEBIAN_FRONTEND=noninteractive && apt install gpg-agent libarchive-tools -y"
-    fi    
-    if [[ $VERSION != *16.04* && $VERSION != *20.04* ]]; then
+    zstd libglu1-mesa usbutils fonts-dejavu-core pysassc nano compton libgl1-mesa-dev \
+    meson libvte-2.91-dev bsdtar -y"
+    if [[ $VERSION != *18.04* ]]; then
         chroot $STARTDIR/root.x86_64/ /bin/bash -c "export DEBIAN_FRONTEND=noninteractive && apt install picom libgtk-4-dev -y"
     fi    
-    if [[ $VERSION == *16.04* || $VERSION == *20.04* ]]; then
+    if [[ $VERSION == *18.04* || $VERSION == *22.04* ]]; then
         chroot $STARTDIR/root.x86_64/ /bin/bash -c "export DEBIAN_FRONTEND=noninteractive && apt install gnome-icon-theme \
         gtk2-engines-murrine gtk2-engines-pixbuf libgtkglext1 libpangox-1.0-0 -y"
     fi    
