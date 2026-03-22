@@ -45,8 +45,8 @@ fn_build_rootfs() {
     xfonts-utils mpg123 libxslt1.1 at-spi2-core x11-xserver-utils lm-sensors \
     software-properties-common pciutils gvfs libgles2 libgtk-3-dev pkg-config \
     gir1.2-gtksource-3.0 python3-tk eject ffmpeg rofi adb xdotool wmctrl \
-    zstd libglu1-mesa usbutils fonts-dejavu-core pysassc nano compton libgl1-mesa-dev \
-    meson libvte-2.91-dev bsdtar -y"
+    zstd libglu1-mesa-dev usbutils fonts-dejavu-core pysassc nano compton libgl1-mesa-dev \
+    meson libvte-2.91-dev bsdtar idesk icewm papirus-icon-theme -y"
     if [[ $VERSION != *18.04* ]]; then
         chroot $STARTDIR/root.x86_64/ /bin/bash -c "export DEBIAN_FRONTEND=noninteractive && apt install picom libgtk-4-dev -y"
     fi    
@@ -64,7 +64,7 @@ fn_build_rootfs() {
     # other
     rm -r $STARTDIR/root.x86_64/usr/share/{doc,info,locale,man}
     find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs rm
-    find $STARTDIR/root.x86_64/usr/share/icons/ -mindepth 1 -maxdepth 1 -type d ! \( -name hicolor -o -name Adwaita -o -name default -o -name gnome \) -exec rm -r {} +
+    find $STARTDIR/root.x86_64/usr/share/icons/ -mindepth 1 -maxdepth 1 -type d ! \( -name hicolor -o -name Adwaita -o -name default -o -name gnome -o -name 'Papirus*' \) -exec rm -r {} +
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "umount /proc"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "umount /sys"
 }
