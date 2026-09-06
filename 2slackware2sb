@@ -16,7 +16,7 @@ fn_download_and_extract() {
     fetch up; fetch cc; fetch dl $(cat part1 | tr '\n' ' ')
     mv /var/cache/slackware/* .; fetch xa; mv install root.x86_64
     rm *.t?z 2>/dev/null
-    if [ ! -f yt-dlp ]; then wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp; fi
+    if [ ! -f yt-dlp ]; then wget https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp_linux -O yt-dlp; fi
 }
 
 fn_build_rootfs() {
