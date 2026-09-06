@@ -43,6 +43,7 @@ harfbuzz
 hicolor-icon-theme
 hwdata
 icu4c
+idna
 infozip
 inputproto
 intltool
@@ -132,6 +133,10 @@ polkit
 poppler
 pygobject3
 python
+python-certifi
+python-chardet
+python-requests
+python-urllib3
 randrproto
 renderproto
 rsync
