@@ -38,6 +38,7 @@ gperf
 gsettings-desktop-schemas
 gtk+2
 gtk+3
+gtksourceview3
 guile
 harfbuzz
 hicolor-icon-theme
@@ -140,6 +141,7 @@ python-urllib3
 randrproto
 renderproto
 rsync
+scrnsaverproto
 setxkbmap
 shadow
 shared-mime-info
