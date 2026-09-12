@@ -111,6 +111,7 @@ libtool
 libxcb
 libxfce4ui
 libxfce4util
+libxkbcommon
 libxkbfile
 libxshmfence
 llvm
