@@ -18,6 +18,7 @@ freeglut
 gamin
 gcr
 giblib
+girara
 gtkglext
 gvfs
 imlib2
@@ -87,3 +88,5 @@ x265
 xcalib
 xfce4-notifyd
 xvidcore
+zathura
+zathura-pdf-mupdf
