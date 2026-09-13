@@ -7,8 +7,8 @@
 
 VERSION="14.2"
 MAIN_MIRROR="https://mirror.de.leaseweb.net/slackware/slackware64-$VERSION"
-OTHER_MIRRORS=( "https://ftp.nluug.nl/os/Linux/distr/salix/x86_64/$VERSION"
-                "https://ftp.nluug.nl/os/Linux/distr/salix/x86_64/extra-$VERSION")
+OTHER_MIRRORS=( "https://repo.greeklug.gr/data/pub/linux/salix/x86_64/$VERSION"
+                "https://repo.greeklug.gr/data/pub/linux/salix/x86_64/extra-$VERSION")
 
 DBPATH="/var/lib/slackware"
 CACHEDIR="/var/cache/slackware"
