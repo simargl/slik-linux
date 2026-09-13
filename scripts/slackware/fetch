@@ -10,6 +10,12 @@ OTHER_MIRRORS=("https://repo.greeklug.gr/data/pub/linux/salix/x86_64/$VERSION"
 DBPATH="/var/lib/slackware"
 CACHEDIR="/var/cache/slackware"
 
+# Root check
+if [[ $EUID -ne 0 ]]; then
+    printf "Error: This script must be run as root\n"
+    exit 1
+fi
+
 # Colors
 if [ -t 1 ]; then
     RESET='\033[0m'; BOLD='\033[1m'; DIM='\033[2m'
