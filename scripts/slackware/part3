@@ -3,6 +3,7 @@ SDL2
 SDL2_image
 a52dec
 aalib
+android-tools
 at-spi2-atk
 atk
 audiofile
@@ -14,6 +15,7 @@ feh
 ffmpeg
 fftw
 flac
+fltk
 freeglut
 gamin
 gcr
@@ -79,6 +81,8 @@ scrot
 sdl
 speex
 speexdsp
+tcl
+tk
 tolua++
 v4l-utils
 vte3
