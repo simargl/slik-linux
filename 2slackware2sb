@@ -31,6 +31,7 @@ fn_build_rootfs() {
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "fetch it $(cat $STARTDIR/part3 | tr '\n' ' '); fetch cc"
     chroot $STARTDIR/root.x86_64/ /bin/bash -c "update-ca-certificates -f"
     install -m755 yt-dlp $STARTDIR/root.x86_64/usr/bin/yt-dlp
+    ln -sf python3 $STARTDIR/root.x86_64/usr/bin/python
     # cache
     rm -r $STARTDIR/root.x86_64/usr/share/mime/globs
     rm -r $STARTDIR/root.x86_64/usr/share/icons/hicolor/icon-theme.cache
