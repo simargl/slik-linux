@@ -92,11 +92,11 @@ awk -v mirror="$1" '
 BEGIN { FS=": "; OFS="|"; url=""; description="" }
 /^PACKAGE NAME:/ {
     package_name=$2
-    gsub(/^[ \t]+|[ \t]+$/,"",package_name)
+    sub(/^[ \t]+|[ \t]+$/,"",package_name)
 }
 /^PACKAGE LOCATION:/ {
-    gsub(/^[ \t]+|[ \t]+$/,"",$2)
-    gsub(/^\./,"",$2)
+    sub(/^[ \t]+|[ \t]+$/,"",$2)
+    sub(/^\./,"",$2)
     url=mirror "/" $2 "/" package_name
 }
 /^PACKAGE DESCRIPTION:/ {
@@ -142,14 +142,15 @@ fn_pkg_search_print_out() {
 }
 
 fn_pkg_search() {
-    if [[ -n "$ARG" ]]; then
+    local search_term="$1"
+    if [[ -n "$search_term" ]]; then
         if [ ! -f "$DBPATH/packages.db" ]; then
             ui_error "Package database missing. Please run 'fetch up' first."
             exit 1
         fi
         local PKGSEARCH
-        PKGSEARCH=$(grep -i "$ARG" "$DBPATH/packages.db")
-        ui_section "Searching for $ARG..."
+        PKGSEARCH=$(grep -i "$search_term" "$DBPATH/packages.db")
+        ui_section "Searching for $search_term..."
         if [[ -n "$PKGSEARCH" ]]; then
             local count=0
             while IFS= read -r result; do
@@ -161,7 +162,7 @@ fn_pkg_search() {
             done <<< "$PKGSEARCH"
             printf "${BOLD}::${RESET} %s package%s found\n" "$count" "$([ "$count" -eq 1 ] && echo "" || echo "s")"
         else
-            ui_error "No results found for '$ARG'"
+            ui_error "No results found for '$search_term'"
         fi
     else
         ui_warning "Please provide a search term."
@@ -191,9 +192,10 @@ fn_check_pkgmatch_exists() {
 
 # Download
 fn_pkg_download() {
-    if [[ -n "$ARG" ]]; then
+    local pkg_name="$1"
+    if [[ -n "$pkg_name" ]]; then
         local pkgmatch
-        pkgmatch="$(fn_get_pkgmatch "$ARG")"
+        pkgmatch="$(fn_get_pkgmatch "$pkg_name")"
         if [[ -n "$pkgmatch" ]]; then
             local file
             file="$(basename "$pkgmatch")"
@@ -210,7 +212,7 @@ fn_pkg_download() {
                 printf " %s ${DIM}[cached]${RESET}\n" "$file"
             fi
         else
-            ui_error "Unable to locate package $ARG"
+            ui_error "Unable to locate package $pkg_name"
         fi
     fi
 }
@@ -220,8 +222,7 @@ fn_pkg_download_all() {
     local max_parallel=7
     local current_jobs=0
     for pkg in "$@"; do
-        ARG="$pkg"
-        fn_pkg_download &
+        fn_pkg_download "$pkg" &
         current_jobs=$((current_jobs+1))
         if [ "$current_jobs" -ge "$max_parallel" ]; then
             wait -n
@@ -256,10 +257,11 @@ fn_write_metadata() {
 
 # Extract Single
 fn_pkg_extract() {
-    if [[ -n "$ARG" && -f "$ARG" ]]; then
+    local file_path="$1"
+    if [[ -n "$file_path" && -f "$file_path" ]]; then
         ui_section "Extracting package..."
-        printf " %s" "$(basename "$ARG")"
-        tar -xf "$ARG"
+        printf " %s" "$(basename "$file_path")"
+        tar -xf "$file_path"
         printf " ${BRIGHT_GREEN}done${RESET}\n"
     else
         ui_error "Extraction failed: File not found or invalid."
@@ -267,20 +269,19 @@ fn_pkg_extract() {
     fi
 }
 
-# Extract All (Restored to original behavior using 'install' folder)
+# Extract All
 fn_pkg_extract_all() {
     ui_section "Extracting packages..."
     for i in *.t?z; do
         [[ -e "$i" ]] || break
-        ARG="$i"
-        printf " %s" "$ARG"
+        local current_file="$i"
+        printf " %s" "$current_file"
         [ ! -d install ] && mkdir install
-        tar -xf "$ARG" -C install
+        tar -xf "$current_file" -C install
         if [ -f "install/install/doinst.sh" ]; then
-            cd install && sh ./install/doinst.sh 2>/dev/null
-            cd "$OLDPWD" || exit
+            (cd install && sh ./install/doinst.sh 2>/dev/null)
         fi
-        fn_write_metadata "$ARG" install
+        fn_write_metadata "$current_file" install
         [ -d install/install ] && rm -r install/install
         printf " ${BRIGHT_GREEN}done${RESET}\n"
     done
@@ -288,12 +289,13 @@ fn_pkg_extract_all() {
 
 # Post-install
 fn_pkg_post_actions() {
+    local target_pkgname="$1"
     local ICONS DESKTOP GSETTINGS FONTS
-    if [ -f "$DBPATH/installed/$pkgname/files" ]; then
-        ICONS=$(grep -q /usr/share/icons/hicolor "$DBPATH/installed/$pkgname/files" && echo "icons" || true)
-        DESKTOP=$(grep -q /usr/share/applications "$DBPATH/installed/$pkgname/files" && echo "desktop" || true)
-        GSETTINGS=$(grep -q /usr/share/glib-2.0/schemas "$DBPATH/installed/$pkgname/files" && echo "gsettings" || true)
-        FONTS=$(grep -q /usr/share/fonts/TTF "$DBPATH/installed/$pkgname/files" && echo "fonts" || true)
+    if [ -f "$DBPATH/installed/$target_pkgname/files" ]; then
+        ICONS=$(grep -q /usr/share/icons/hicolor "$DBPATH/installed/$target_pkgname/files" && echo "icons" || true)
+        DESKTOP=$(grep -q /usr/share/applications "$DBPATH/installed/$target_pkgname/files" && echo "desktop" || true)
+        GSETTINGS=$(grep -q /usr/share/glib-2.0/schemas "$DBPATH/installed/$target_pkgname/files" && echo "gsettings" || true)
+        FONTS=$(grep -q /usr/share/fonts/TTF "$DBPATH/installed/$target_pkgname/files" && echo "fonts" || true)
         
         [ -n "$ICONS" ] && { printf "  updating icon cache..."; gtk-update-icon-cache /usr/share/icons/hicolor >/dev/null 2>&1; printf " ${BRIGHT_GREEN}done${RESET}\n"; }
         [ -n "$DESKTOP" ] && { printf "  updating desktop database..."; update-desktop-database >/dev/null 2>&1; printf " ${BRIGHT_GREEN}done${RESET}\n"; }
@@ -330,8 +332,7 @@ fn_pkg_install_local() {
         fn_run_install_script "/install/doinst.sh"
         fn_write_metadata "$target_file" /
         fn_cleanup_install_directory
-        pkgname="$PACKAGE_NAME"
-        fn_pkg_post_actions
+        fn_pkg_post_actions "$PACKAGE_NAME"
     else
         ui_error "Installation failed: File not found or invalid."
         exit 1
@@ -392,8 +393,7 @@ fn_pkg_remove() {
                     [ -f "$file" ] && rm -f "$file"
                 done < "$DBPATH/installed/$i/files"
             fi
-            pkgname="$i"
-            fn_pkg_post_actions
+            fn_pkg_post_actions "$i"
             rm -rf "$DBPATH/installed/$i"
             printf " ${BRIGHT_GREEN}done${RESET}\n"
         else
@@ -424,25 +424,25 @@ fn_pkg_show_help() {
     printf "\n${BOLD}fetch2${RESET} - Slackware package manager\n\n"
     printf "${BOLD}Usage:${RESET} %s <command> [arguments]\n\n" "$(basename "$0")"
     printf "${BOLD}Commands:${RESET}\n"
-    printf "  ${CYAN}up${RESET}              Update repository database\n"
-    printf "  ${CYAN}sr${RESET} <term>       Search for packages\n"
-    printf "  ${CYAN}dl${RESET} <pkg...>     Download package(s)\n"
-    printf "  ${CYAN}xp${RESET} <file>       Extract a single package\n"
-    printf "  ${CYAN}xa${RESET}              Extract all packages into install directory\n"
-    printf "  ${CYAN}it${RESET} <pkg...>     Install package(s)\n"
-    printf "  ${CYAN}rm${RESET} <pkg...>     Uninstall package(s)\n"
-    printf "  ${CYAN}cc${RESET}              Delete cached packages\n"
-    printf "  ${CYAN}li${RESET}              List installed packages\n"
+    printf "  ${CYAN}up${RESET}            Update repository database\n"
+    printf "  ${CYAN}sr${RESET} <term>     Search for packages\n"
+    printf "  ${CYAN}dl${RESET} <pkg...>   Download package(s)\n"
+    printf "  ${CYAN}xp${RESET} <file>     Extract a single package\n"
+    printf "  ${CYAN}xa${RESET}            Extract all packages into install directory\n"
+    printf "  ${CYAN}it${RESET} <pkg...>   Install package(s)\n"
+    printf "  ${CYAN}rm${RESET} <pkg...>   Uninstall package(s)\n"
+    printf "  ${CYAN}cc${RESET}            Delete cached packages\n"
+    printf "  ${CYAN}li${RESET}            List installed packages\n"
     printf "\n"
 }
 
 # Arguments handling
 case "$1" in
     up) fn_repo_update ;;
-    sr) ARG="$2"; fn_pkg_search ;;
+    sr) fn_pkg_search "$2" ;;
     dl) shift; [ $# -eq 0 ] && { ui_error "No packages specified"; exit 1; }
         fn_pkg_download_all "$@" ;;
-    xp) ARG="$2"; fn_pkg_extract ;;
+    xp) fn_pkg_extract "$2" ;;
     xa) fn_pkg_extract_all ;;
     it) shift; [ $# -eq 0 ] && { ui_error "No packages specified"; exit 1; }
         fn_pkg_install "$@" ;;
