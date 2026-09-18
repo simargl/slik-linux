@@ -6,8 +6,8 @@
 VERSION="14.2"
 MAIN_MIRROR="https://mirror.de.leaseweb.net/slackware/slackware64-$VERSION"
 OTHER_MIRRORS=(
-    "https://download.salixos.org/x86_64/$VERSION"
-    "https://download.salixos.org/x86_64/extra-$VERSION"
+    "https://slackware.uk/salix/x86_64/$VERSION"
+    "https://slackware.uk/salix/x86_64/extra-$VERSION"
 )
 DBPATH="/var/lib/slackware"
 CACHEDIR="/var/cache/slackware"
