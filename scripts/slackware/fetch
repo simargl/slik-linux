@@ -1,18 +1,23 @@
 #!/bin/bash
-# fetch2 - Slackware package manager
+# fetch - Slackware package manager
 # Author: simargl <https://github.com/simargl>
 # License: GPL v3
 
 VERSION="14.2"
 MAIN_MIRROR="https://mirror.de.leaseweb.net/slackware/slackware64-$VERSION"
-OTHER_MIRRORS=("https://download.salixos.org/x86_64/$VERSION"
-"https://download.salixos.org/x86_64/extra-$VERSION")
+OTHER_MIRRORS=(
+    "https://download.salixos.org/x86_64/$VERSION"
+    "https://download.salixos.org/x86_64/extra-$VERSION"
+)
 DBPATH="/var/lib/slackware"
 CACHEDIR="/var/cache/slackware"
 
+# Ensure directories exist
+mkdir -p "$DBPATH" "$CACHEDIR"
+
 # Root check
 if [[ $EUID -ne 0 ]]; then
-    printf "Error: This script must be run as root\n"
+    printf "Error: This script must be run as root\n" >&2
     exit 1
 fi
 
@@ -28,7 +33,7 @@ fi
 
 # UI
 ui_section() { printf "\n${BOLD}::${RESET} ${BOLD}%s${RESET}\n" "$1"; }
-ui_error() { printf "${BRIGHT_RED}${BOLD}error:${RESET} %s\n" "$1"; }
+ui_error() { printf "${BRIGHT_RED}${BOLD}error:${RESET} %s\n" "$1" >&2; }
 ui_warning() { printf "${BRIGHT_YELLOW}${BOLD}warning:${RESET} %s\n" "$1"; }
 
 # Repository
@@ -39,32 +44,46 @@ fn_download_file() {
 }
 
 fn_repo_update() {
-    [ -f "$DBPATH/packages.db" ] && rm "$DBPATH/packages.db"
+    [ -f "$DBPATH/packages.db" ] && rm -f "$DBPATH/packages.db"
     ui_section "Synchronizing package databases..."
     printf " ${BOLD}Slackware $VERSION${RESET}\n"
+    
     for i in extra patches; do
-        fn_download_file "$MAIN_MIRROR/$i/PACKAGES.TXT" "$DBPATH" "$i"
-        cd "$DBPATH" || exit
-        extract_package_info "$MAIN_MIRROR" "PACKAGES.TXT" >> "$DBPATH/packages.db"
-        rm PACKAGES.*
+        TMP_DIR=$(mktemp -d)
+        fn_download_file "$MAIN_MIRROR/$i/PACKAGES.TXT" "$TMP_DIR" "$i"
+        if [ -f "$TMP_DIR/PACKAGES.TXT" ]; then
+            extract_package_info "$MAIN_MIRROR" "$TMP_DIR/PACKAGES.TXT" >> "$DBPATH/packages.db"
+        fi
+        rm -rf "$TMP_DIR"
     done
-    fn_download_file "$MAIN_MIRROR/PACKAGES.TXT" "$DBPATH" "core"
-    extract_package_info "$MAIN_MIRROR" "PACKAGES.TXT" >> "$DBPATH/packages.db"
-    rm PACKAGES.*
+    
+    TMP_DIR=$(mktemp -d)
+    fn_download_file "$MAIN_MIRROR/PACKAGES.TXT" "$TMP_DIR" "core"
+    if [ -f "$TMP_DIR/PACKAGES.TXT" ]; then
+        extract_package_info "$MAIN_MIRROR" "$TMP_DIR/PACKAGES.TXT" >> "$DBPATH/packages.db"
+    fi
+    rm -rf "$TMP_DIR"
+
     printf "\n ${BOLD}Salix${RESET}\n"
-    for ((i=0;i<"${#OTHER_MIRRORS[@]}";i++)); do
-        repo_name="$(basename "${OTHER_MIRRORS[i]}")"
+    for repo_url in "${OTHER_MIRRORS[@]}"; do
+        repo_name="$(basename "$repo_url")"
         printf " %s" "$repo_name"
-        wget -q -nv --no-check-certificate "${OTHER_MIRRORS[i]}/PACKAGES.TXT" -P "$DBPATH"
-        if [ -f "$DBPATH/PACKAGES.TXT" ]; then
-            extract_package_info "${OTHER_MIRRORS[i]}" "PACKAGES.TXT" >> "$DBPATH/packages.db"
-            rm PACKAGES.*
+        TMP_DIR=$(mktemp -d)
+        wget -q -nv --no-check-certificate "$repo_url/PACKAGES.TXT" -P "$TMP_DIR"
+        if [ -f "$TMP_DIR/PACKAGES.TXT" ]; then
+            extract_package_info "$repo_url" "$TMP_DIR/PACKAGES.TXT" >> "$DBPATH/packages.db"
             printf " ${BRIGHT_GREEN}done${RESET}\n"
         else
             printf " ${BRIGHT_YELLOW}failed${RESET}\n"
         fi
+        rm -rf "$TMP_DIR"
     done
-    PACKAGE_COUNT="$(grep -c ^ "$DBPATH/packages.db")"
+
+    if [ -f "$DBPATH/packages.db" ]; then
+        PACKAGE_COUNT="$(grep -c ^ "$DBPATH/packages.db")"
+    else
+        PACKAGE_COUNT=0
+    fi
     printf "\n${BOLD}::${RESET} Synchronization complete ${DIM}(%s packages)${RESET}\n" "$PACKAGE_COUNT"
 }
 
@@ -96,45 +115,51 @@ END {
 
 # Search
 fn_pkg_search_print_out() {
-    e_url="$1"
-    e_filename="${e_url##*/}"
-    e_base="${e_filename%.t?z}"
-    e_release="${e_base##*-}"
-    e_temp="${e_base%-*}"
-    e_arch="${e_temp##*-}"
-    e_temp="${e_temp%-*}"
-    e_version="${e_temp##*-}"
-    e_name="${e_temp%-*}"
+    local e_url="$1"
+    local e_filename="${e_url##*/}"
+    local e_base="${e_filename%.t?z}"
+    local e_release="${e_base##*-}"
+    local e_temp="${e_base%-*}"
+    local e_arch="${e_temp##*-}"
+    local e_temp="${e_temp%-*}"
+    local e_version="${e_temp##*-}"
+    local e_name="${e_temp%-*}"
+    local e_desc
     e_desc="$(echo "$2" | sed "s/$e_name //g")"
-    status=""
+    local status=""
+    
     if [ -d "$DBPATH/installed/$e_name" ] && [ -f "$DBPATH/installed/$e_name/pkginfo" ]; then
+        # shellcheck source=/dev/null
         source "$DBPATH/installed/$e_name/pkginfo"
         if [ "$pkgver" = "$e_version" ] && [ "$pkgrel" = "$e_release" ]; then
             status=" ${BRIGHT_GREEN}[installed]${RESET}"
         fi
     fi
     printf " ${BOLD}%s${RESET} %s-%s %s%b\n" "$e_name" "$e_version" "$e_release" "$e_arch" "$status"
+    local e_desc_no_braces
     e_desc_no_braces="$(echo "$e_desc" | sed 's/[()]//g')"
     printf "    ${DIM}%s${RESET}\n\n" "$e_desc_no_braces"
 }
 
 fn_pkg_search() {
-    if [[ $ARG ]]; then
+    if [[ -n "$ARG" ]]; then
+        if [ ! -f "$DBPATH/packages.db" ]; then
+            ui_error "Package database missing. Please run 'fetch up' first."
+            exit 1
+        fi
+        local PKGSEARCH
         PKGSEARCH=$(grep -i "$ARG" "$DBPATH/packages.db")
         ui_section "Searching for $ARG..."
-        if [[ "$PKGSEARCH" != "" ]]; then
-            count=0
-            while read -r result; do
+        if [[ -n "$PKGSEARCH" ]]; then
+            local count=0
+            while IFS= read -r result; do
+                local urlR descriptionR
                 urlR="$(echo "$result" | cut -d '|' -f1)"
                 descriptionR="$(echo "$result" | cut -d '|' -f2)"
                 fn_pkg_search_print_out "$urlR" "$descriptionR"
                 count=$((count+1))
             done <<< "$PKGSEARCH"
-            if [ "$count" -eq 1 ]; then
-                printf "${BOLD}::${RESET} 1 package found\n"
-            else
-                printf "${BOLD}::${RESET} %s packages found\n" "$count"
-            fi
+            printf "${BOLD}::${RESET} %s package%s found\n" "$count" "$([ "$count" -eq 1 ] && echo "" || echo "s")"
         else
             ui_error "No results found for '$ARG'"
         fi
@@ -144,20 +169,20 @@ fn_pkg_search() {
 }
 
 fn_get_pkgmatch() {
-    grep "/$1-[0-9]" "$DBPATH/packages.db" | head -1 | cut -d '|' -f1
+    [ -f "$DBPATH/packages.db" ] && grep -m1 "/$1-[0-9]" "$DBPATH/packages.db" | cut -d '|' -f1
 }
 
 fn_check_pkgmatch_exists() {
-    unset MISSING
-    LIST="$@"
-    for ONE in $LIST; do
-        PKGMATCH="$(fn_get_pkgmatch "$ONE")"
-        if [[ $PKGMATCH == "" ]]; then
-            MISSING+=("$ONE")
+    local missing=()
+    for ONE in "$@"; do
+        local pkgmatch
+        pkgmatch="$(fn_get_pkgmatch "$ONE")"
+        if [[ -z "$pkgmatch" ]]; then
+            missing+=("$ONE")
         fi
     done
-    if [[ ${#MISSING[@]} != 0 ]]; then
-        for i in "${MISSING[@]}"; do
+    if [[ ${#missing[@]} -ne 0 ]]; then
+        for i in "${missing[@]}"; do
             ui_error "Unable to locate package $i"
         done
         exit 1
@@ -166,21 +191,23 @@ fn_check_pkgmatch_exists() {
 
 # Download
 fn_pkg_download() {
-    if [ $ARG ]; then
-        PKGMATCH="$(fn_get_pkgmatch "$ARG")"
-        if [[ "$PKGMATCH" != "" ]]; then
-            FILE="$(basename "$PKGMATCH")"
-            if [ ! -f "$CACHEDIR/$FILE" ]; then
-                printf " %s" "$FILE"
-                wget -q -nv --no-check-certificate "$PKGMATCH" -P "$CACHEDIR"
-                if [ ! -f "$CACHEDIR/$FILE" ]; then
+    if [[ -n "$ARG" ]]; then
+        local pkgmatch
+        pkgmatch="$(fn_get_pkgmatch "$ARG")"
+        if [[ -n "$pkgmatch" ]]; then
+            local file
+            file="$(basename "$pkgmatch")"
+            if [ ! -f "$CACHEDIR/$file" ]; then
+                printf " %s" "$file"
+                wget -q -nv --no-check-certificate "$pkgmatch" -P "$CACHEDIR"
+                if [ ! -f "$CACHEDIR/$file" ]; then
                     printf " ${BRIGHT_RED}failed${RESET}\n"
-                    ui_error "$FILE download failed"
+                    ui_error "$file download failed"
                     exit 1
                 fi
                 printf " ${BRIGHT_GREEN}done${RESET}\n"
             else
-                printf " %s ${DIM}[cached]${RESET}\n" "$FILE"
+                printf " %s ${DIM}[cached]${RESET}\n" "$file"
             fi
         else
             ui_error "Unable to locate package $ARG"
@@ -189,10 +216,10 @@ fn_pkg_download() {
 }
 
 fn_pkg_download_all() {
-    fn_check_pkgmatch_exists $ARGD
-    max_parallel=7
-    current_jobs=0
-    for pkg in $ARGD; do
+    fn_check_pkgmatch_exists "$@"
+    local max_parallel=7
+    local current_jobs=0
+    for pkg in "$@"; do
         ARG="$pkg"
         fn_pkg_download &
         current_jobs=$((current_jobs+1))
@@ -206,20 +233,30 @@ fn_pkg_download_all() {
 
 # Metadata
 fn_write_metadata() {
-    nv="$(echo "$1" | sed 's/\(.*\)-[^-]*-[^-]*$/\1/')"
+    local pkgfile="$1"
+    local destroot="$2"
+    local nv
+    nv="$(basename "$pkgfile" | sed 's/\(.*\)-[^-]*-[^-]*$/\1/')"
+    local pkgname
     pkgname="$(echo "$nv" | sed 's/-[^-]*$//')"
+    local pkgver
     pkgver="$(echo "$nv" | sed 's/.*-//')"
-    pkgrel="$(echo "${1##*-}" | sed 's/.t.z//')"
-    mkdir -p "$2/$DBPATH/installed/$pkgname"
-    echo pkgname="$pkgname" > "$2/$DBPATH/installed/$pkgname/pkginfo"
-    echo pkgver="$pkgver" >> "$2/$DBPATH/installed/$pkgname/pkginfo"
-    echo pkgrel="$pkgrel" >> "$2/$DBPATH/installed/$pkgname/pkginfo"
-    tar -tvf "$1" | awk '!/^d/ {print $NF}' | grep -v "install/" | sed 's/^/\//' > "$2/$DBPATH/installed/$pkgname/files"
+    local pkgrel
+    pkgrel="$(echo "${pkgfile##*-}" | sed 's/\.t[glx]z//')"
+    
+    mkdir -p "$destroot/$DBPATH/installed/$pkgname"
+    {
+        echo "pkgname=$pkgname"
+        echo "pkgver=$pkgver"
+        echo "pkgrel=$pkgrel"
+    } > "$destroot/$DBPATH/installed/$pkgname/pkginfo"
+    
+    tar -tvf "$pkgfile" | awk '!/^d/ {print $NF}' | grep -v "^install/" | sed 's/^/\//' > "$destroot/$DBPATH/installed/$pkgname/files"
 }
 
-# Extract
+# Extract Single
 fn_pkg_extract() {
-    if [[ "$ARG" != "" && -f "$ARG" ]]; then
+    if [[ -n "$ARG" && -f "$ARG" ]]; then
         ui_section "Extracting package..."
         printf " %s" "$(basename "$ARG")"
         tar -xf "$ARG"
@@ -230,6 +267,7 @@ fn_pkg_extract() {
     fi
 }
 
+# Extract All (Restored to original behavior using 'install' folder)
 fn_pkg_extract_all() {
     ui_section "Extracting packages..."
     for i in *.t?z; do
@@ -251,68 +289,48 @@ fn_pkg_extract_all() {
 # Post-install
 fn_pkg_post_actions() {
     local ICONS DESKTOP GSETTINGS FONTS
-    ICONS=$(grep /usr/share/icons/hicolor "$DBPATH/installed/$pkgname/files" || true)
-    DESKTOP=$(grep /usr/share/applications "$DBPATH/installed/$pkgname/files" || true)
-    GSETTINGS=$(grep /usr/share/glib-2.0/schemas "$DBPATH/installed/$pkgname/files" || true)
-    FONTS=$(grep /usr/share/fonts/TTF "$DBPATH/installed/$pkgname/files" || true)
-    local file_paths=("$ICONS" "$DESKTOP" "$GSETTINGS" "$FONTS")
-    for file_path in "${file_paths[@]}"; do
-        if [ "$file_path" ]; then
-            case "$file_path" in
-                "$ICONS")
-                    printf "  updating icon cache..."
-                    gtk-update-icon-cache /usr/share/icons/hicolor >/dev/null 2>&1
-                    printf " ${BRIGHT_GREEN}done${RESET}\n"
-                    ;;
-                "$DESKTOP")
-                    printf "  updating desktop database..."
-                    update-desktop-database >/dev/null 2>&1
-                    printf " ${BRIGHT_GREEN}done${RESET}\n"
-                    ;;
-                "$GSETTINGS")
-                    printf "  compiling GSettings schemas..."
-                    glib-compile-schemas /usr/share/glib-2.0/schemas >/dev/null 2>&1
-                    printf " ${BRIGHT_GREEN}done${RESET}\n"
-                    ;;
-                "$FONTS")
-                    printf "  updating font cache..."
-                    fc-cache -f -s >/dev/null 2>&1
-                    mkfontscale /usr/share/fonts/TTF >/dev/null 2>&1
-                    mkfontdir /usr/share/fonts/TTF >/dev/null 2>&1
-                    printf " ${BRIGHT_GREEN}done${RESET}\n"
-                    ;;
-            esac
-        fi
-    done
+    if [ -f "$DBPATH/installed/$pkgname/files" ]; then
+        ICONS=$(grep -q /usr/share/icons/hicolor "$DBPATH/installed/$pkgname/files" && echo "icons" || true)
+        DESKTOP=$(grep -q /usr/share/applications "$DBPATH/installed/$pkgname/files" && echo "desktop" || true)
+        GSETTINGS=$(grep -q /usr/share/glib-2.0/schemas "$DBPATH/installed/$pkgname/files" && echo "gsettings" || true)
+        FONTS=$(grep -q /usr/share/fonts/TTF "$DBPATH/installed/$pkgname/files" && echo "fonts" || true)
+        
+        [ -n "$ICONS" ] && { printf "  updating icon cache..."; gtk-update-icon-cache /usr/share/icons/hicolor >/dev/null 2>&1; printf " ${BRIGHT_GREEN}done${RESET}\n"; }
+        [ -n "$DESKTOP" ] && { printf "  updating desktop database..."; update-desktop-database >/dev/null 2>&1; printf " ${BRIGHT_GREEN}done${RESET}\n"; }
+        [ -n "$GSETTINGS" ] && { printf "  compiling GSettings schemas..."; glib-compile-schemas /usr/share/glib-2.0/schemas >/dev/null 2>&1; printf " ${BRIGHT_GREEN}done${RESET}\n"; }
+        [ -n "$FONTS" ] && { printf "  updating font cache..."; fc-cache -f -s >/dev/null 2>&1; mkfontscale /usr/share/fonts/TTF >/dev/null 2>&1; mkfontdir /usr/share/fonts/TTF >/dev/null 2>&1; printf " ${BRIGHT_GREEN}done${RESET}\n"; }
+    fi
 }
 
 fn_run_install_script() {
     if [ -f "$1" ]; then
-        cd / && sh "$1" 2>/dev/null
-        cd "$OLDPWD"
+        (cd / && sh "$1" >/dev/null 2>&1)
     fi
 }
 
 fn_cleanup_install_directory() {
-    [ -d /install ] && rm -r /install
+    [ -d /install ] && rm -rf /install
 }
 
 # Install
 fn_pkg_install_local() {
-    if [[ "$ARG" != "" && -f "$ARG" ]]; then
-        PACKAGE_FILE="$(basename "$ARG")"
-        PACKAGE_BASE="${PACKAGE_FILE%.t?z}"
-        PACKAGE_RELEASE="${PACKAGE_BASE##*-}"
-        PACKAGE_TEMP="${PACKAGE_BASE%-*}"
-        PACKAGE_ARCH="${PACKAGE_TEMP##*-}"
-        PACKAGE_TEMP="${PACKAGE_TEMP%-*}"
-        PACKAGE_VERSION="${PACKAGE_TEMP##*-}"
-        PACKAGE_NAME="${PACKAGE_TEMP%-*}"
+    local target_file="$1"
+    if [[ -n "$target_file" && -f "$target_file" ]]; then
+        local PACKAGE_FILE="$(basename "$target_file")"
+        local PACKAGE_BASE="${PACKAGE_FILE%.t?z}"
+        local PACKAGE_RELEASE="${PACKAGE_BASE##*-}"
+        local PACKAGE_TEMP="${PACKAGE_BASE%-*}"
+        local PACKAGE_ARCH="${PACKAGE_TEMP##*-}"
+        local PACKAGE_TEMP="${PACKAGE_TEMP%-*}"
+        local PACKAGE_VERSION="${PACKAGE_TEMP##*-}"
+        local PACKAGE_NAME="${PACKAGE_TEMP%-*}"
+        
         printf " %s %s-%s %s\n" "$PACKAGE_NAME" "$PACKAGE_VERSION" "$PACKAGE_RELEASE" "$PACKAGE_ARCH"
-        tar -xf "$ARG" -C /
+        tar -xf "$target_file" -C /
         fn_run_install_script "/install/doinst.sh"
-        fn_write_metadata "$ARG" /
+        fn_write_metadata "$target_file" /
         fn_cleanup_install_directory
+        pkgname="$PACKAGE_NAME"
         fn_pkg_post_actions
     else
         ui_error "Installation failed: File not found or invalid."
@@ -321,40 +339,41 @@ fn_pkg_install_local() {
 }
 
 fn_pkg_install() {
-    LOCAL="false"
-    for ONE in $ARGI; do
+    local local_install=false
+    for ONE in "$@"; do
         if [ -f "$ONE" ]; then
-            LOCAL="true"
-            ARG="$ONE"
-            NAME="$(echo "$ARG" | sed 's/\(.*\)-[^-]*-[^-]*$/\1/' | sed 's/-[^-]*$//')"
-            if [ -d "$DBPATH/installed/$NAME" ]; then
-                ui_warning "$ARG is already installed"
+            local_install=true
+            local name
+            name="$(basename "$ONE" | sed 's/\(.*\)-[^-]*-[^-]*$/\1/' | sed 's/-[^-]*$//')"
+            if [ -d "$DBPATH/installed/$name" ]; then
+                ui_warning "$ONE is already installed"
             else
                 ui_section "Installing package..."
-                fn_pkg_install_local
+                fn_pkg_install_local "$ONE"
             fi
         fi
     done
-    if [ "$LOCAL" = true ]; then exit 0; fi
-    fn_check_pkgmatch_exists "$ARGI"
-    for ONE in $ARGI; do
-        ARG="$ONE"
-        if [ -d "$DBPATH/installed/$ARG" ]; then
-            ui_warning "$ARG is already installed"
+    if [ "$local_install" = true ]; then exit 0; fi
+
+    fn_check_pkgmatch_exists "$@"
+    for ONE in "$@"; do
+        if [ -d "$DBPATH/installed/$ONE" ]; then
+            ui_warning "$ONE is already installed"
             exit 1
         fi
     done
-    ARGD="$ARGI"
+
     ui_section "Downloading packages..."
-    fn_pkg_download_all
+    fn_pkg_download_all "$@"
+    
     printf "\n${BOLD}::${RESET} Installing packages...\n"
-    for ONE in $ARGI; do
-        ARG="$ONE"
-        PKGMATCH="$(fn_get_pkgmatch "$ARG")"
-        FILE="$(basename "$PKGMATCH")"
-        if [ -f "$CACHEDIR/$FILE" ]; then
-            ARG="$FILE"
-            cd "$CACHEDIR" && fn_pkg_install_local && cd "$OLDPWD"
+    for ONE in "$@"; do
+        local pkgmatch
+        pkgmatch="$(fn_get_pkgmatch "$ONE")"
+        local file
+        file="$(basename "$pkgmatch")"
+        if [ -f "$CACHEDIR/$file" ]; then
+            fn_pkg_install_local "$CACHEDIR/$file"
         fi
     done
     printf "\n${BOLD}::${RESET} ${BRIGHT_GREEN}Installation complete${RESET}\n"
@@ -363,15 +382,19 @@ fn_pkg_install() {
 # Remove
 fn_pkg_remove() {
     ui_section "Removing packages..."
-    for i in $ARGR; do
+    for i in "$@"; do
         if [ -f "$DBPATH/installed/$i/pkginfo" ]; then
+            # shellcheck source=/dev/null
             source "$DBPATH/installed/$i/pkginfo"
             printf " %s %s-%s\n" "$i" "$pkgver" "$pkgrel"
-            cat "$DBPATH/installed/$i/files" | while read -r file; do
-                [ -f "$file" ] && rm "$file"
-            done
+            if [ -f "$DBPATH/installed/$i/files" ]; then
+                while IFS= read -r file; do
+                    [ -f "$file" ] && rm -f "$file"
+                done < "$DBPATH/installed/$i/files"
+            fi
+            pkgname="$i"
             fn_pkg_post_actions
-            rm -r "$DBPATH/installed/$i"
+            rm -rf "$DBPATH/installed/$i"
             printf " ${BRIGHT_GREEN}done${RESET}\n"
         else
             ui_warning "$i is not installed"
@@ -382,13 +405,15 @@ fn_pkg_remove() {
 
 # Misc
 fn_pkg_clean_cache() {
-    rm "$CACHEDIR"/* 2>/dev/null
+    rm -f "$CACHEDIR"/* 2>/dev/null
+    printf "${BOLD}::${RESET} Cache cleaned.\n"
 }
 
 fn_pkg_list_installed() {
     local dir
     for dir in "$DBPATH"/installed/*/; do
         [ -f "$dir/pkginfo" ] || continue
+        # shellcheck source=/dev/null
         . "$dir/pkginfo"
         printf '%s %s-%s\n' "$pkgname" "$pkgver" "$pkgrel"
     done | sort -k1,1
@@ -403,7 +428,7 @@ fn_pkg_show_help() {
     printf "  ${CYAN}sr${RESET} <term>       Search for packages\n"
     printf "  ${CYAN}dl${RESET} <pkg...>     Download package(s)\n"
     printf "  ${CYAN}xp${RESET} <file>       Extract a single package\n"
-    printf "  ${CYAN}xa${RESET}              Extract all packages\n"
+    printf "  ${CYAN}xa${RESET}              Extract all packages into install directory\n"
     printf "  ${CYAN}it${RESET} <pkg...>     Install package(s)\n"
     printf "  ${CYAN}rm${RESET} <pkg...>     Uninstall package(s)\n"
     printf "  ${CYAN}cc${RESET}              Delete cached packages\n"
@@ -411,16 +436,19 @@ fn_pkg_show_help() {
     printf "\n"
 }
 
-# Arguments
+# Arguments handling
 case "$1" in
     up) fn_repo_update ;;
     sr) ARG="$2"; fn_pkg_search ;;
-    dl) shift; ARGD="$@"; fn_pkg_download_all ;;
+    dl) shift; [ $# -eq 0 ] && { ui_error "No packages specified"; exit 1; }
+        fn_pkg_download_all "$@" ;;
     xp) ARG="$2"; fn_pkg_extract ;;
     xa) fn_pkg_extract_all ;;
-    it) shift; ARGI="$@"; fn_pkg_install ;;
-    rm) shift; ARGR="$@"; fn_pkg_remove ;;
+    it) shift; [ $# -eq 0 ] && { ui_error "No packages specified"; exit 1; }
+        fn_pkg_install "$@" ;;
+    rm) shift; [ $# -eq 0 ] && { ui_error "No packages specified"; exit 1; }
+        fn_pkg_remove "$@" ;;
     cc) fn_pkg_clean_cache ;;
     li) fn_pkg_list_installed ;;
-    *) fn_pkg_show_help ;;
+    *)  fn_pkg_show_help ;;
 esac
