@@ -3,7 +3,7 @@
 # Author: simargl <https://github.com/simargl>
 # License: GPL v3
 
-VERSION="14.2"
+VERSION="14.1"
 MAIN_MIRROR="https://mirror.de.leaseweb.net/slackware/slackware64-$VERSION"
 OTHER_MIRRORS=(
     "https://slackware.uk/salix/x86_64/$VERSION"
@@ -187,15 +187,21 @@ fn_pkg_search() {
     ui_section "Searching for $search_term..."
 
     local count=0
+    local tmp_results
+    tmp_results=$(mktemp)
+
+    awk -F'|' -v term="$search_term" '
+        BEGIN { IGNORECASE=1 }
+        index($1,term) || index($6,term)
+    ' "$DBPATH/packages.db" > "$tmp_results"
+
     while IFS='|' read -r name version arch release url desc; do
+        [ -z "$name" ] && continue
         fn_pkg_search_print_out "$name" "$version" "$arch" "$release" "$url" "$desc"
         count=$((count+1))
-    done < <(
-        awk -F'|' -v term="$search_term" '
-            BEGIN { IGNORECASE=1 }
-            index($1,term) || index($6,term)
-        ' "$DBPATH/packages.db"
-    )
+    done < "$tmp_results"
+
+    rm -f "$tmp_results"
 
     if [ "$count" -eq 0 ]; then
         ui_error "No results found for '$search_term'"
