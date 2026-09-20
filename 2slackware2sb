@@ -42,7 +42,6 @@ fn_build_rootfs() {
     find $STARTDIR/root.x86_64/usr/share/applications -type f -not -name transmission-gtk.desktop | xargs rm
     # static libs
     chroot $STARTDIR/root.x86_64/ /bin/bash -c 'grep "\.a$" /var/log/packages/llvm-* | xargs -r -d "\n" rm -f'
-    chroot $STARTDIR/root.x86_64/ /bin/bash -c 'grep "\.a$" /var/log/packages/boost-* | xargs -r -d "\n" rm -f'
     chroot $STARTDIR/root.x86_64/ /bin/bash -c 'grep "\.a$" /var/log/packages/audiofile-* | xargs -r -d "\n" rm -f'
     # python cleanup
     find $STARTDIR/root.x86_64 -type f -name "*.pyc" -delete
