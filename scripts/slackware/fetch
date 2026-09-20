@@ -162,12 +162,10 @@ fn_repo_update() {
 # Search
 fn_pkg_search_print_out() {
     local name="$1" version="$2" arch="$3" release="$4" url="$5" desc="$6" status=""
-    # Check native Slackware package logs in /var/log/packages/
     if ls "$LOGDIR/$name-"* >/dev/null 2>&1; then
         for installed_pkg in "$LOGDIR/$name-"*; do
             [ -f "$installed_pkg" ] || continue
             local base_pkg="${installed_pkg##*/}"
-            # Match exact name, version, and release
             if [ "$base_pkg" = "$name-$version-$arch-$release" ]; then
                 status=" ${BRIGHT_GREEN}[installed]${RESET}"
                 break
@@ -180,7 +178,7 @@ fn_pkg_search_print_out() {
 
 fn_pkg_search() {
     local search_term="$1"
-    [ -z "$search_term" ] && { ui_warning "Please provide a search term."; return; }
+    [ -z "$search_term" ] && { ui_warning "Please provide a search term."; return 1; }
     [ ! -f "$DBPATH/packages.db" ] && {
         ui_error "Package database missing. Please run 'fetch up' first."
         return 1
@@ -201,6 +199,7 @@ fn_pkg_search() {
 
     if [ "$count" -eq 0 ]; then
         ui_error "No results found for '$search_term'"
+        return 1
     else
         printf "${BOLD}::${RESET} %s package%s found\n" \
             "$count" "$([ "$count" -eq 1 ] && echo "" || echo "s")"
@@ -246,13 +245,13 @@ fn_pkg_download() {
 
 fn_pkg_download_all() {
     fn_check_pkgmatch_exists "$@"
-    local max_parallel=7 current_jobs=0 pkg
+    local max_parallel=7 pids=() pkg
     for pkg in "$@"; do
         fn_pkg_download "$pkg" &
-        current_jobs=$((current_jobs+1))
-        if [ "$current_jobs" -ge "$max_parallel" ]; then
-            wait -n
-            current_jobs=$((current_jobs-1))
+        pids+=($!)
+        if [ "${#pids[@]}" -ge "$max_parallel" ]; then
+            wait "${pids[0]}"
+            pids=("${pids[@]:1}") # Shift the array to remove the finished PID
         fi
     done
     wait
@@ -286,7 +285,6 @@ fn_write_native_metadata() {
     local log_file="$log_dir/$base"
     local script_file="$script_dir/$base"
     
-    # Calculate uncompressed size matching standard block allocation
     local unressed_size
     unressed_size=$(tar -tvf "$target_file" 2>/dev/null | awk '{s+=$3} END {print s}')
 
@@ -329,11 +327,8 @@ fn_pkg_extract_all() {
         base="${base%.t?z}"
         
         printf " %s" "$base"
-        
-        # Extract package contents directly into root.x86_64
         tar -xf "$current_file" -C "$destdir"
         
-        # Execute post-install scriptlet in-place if present
         if [ -f "$destdir/install/doinst.sh" ]; then
             (cd "$destdir" && sh ./install/doinst.sh 2>/dev/null)
             cp "$destdir/install/doinst.sh" "$destdir/var/log/scripts/$base"
@@ -342,10 +337,7 @@ fn_pkg_extract_all() {
             touch "$destdir/var/log/scripts/$base"
         fi
         
-        # Write native metadata logs inside root.x86_64
         fn_write_native_metadata "$current_file" "$destdir"
-        
-        # Clean up internal install directory
         [ -d "$destdir/install" ] && rm -rf "$destdir/install"
         
         printf " ${BRIGHT_GREEN}done${RESET}\n"
@@ -353,10 +345,11 @@ fn_pkg_extract_all() {
 
     if [ "$pkg_found" -eq 0 ]; then
         ui_error "No package archives found in cache or current directory."
+        return 1
     fi
 }
 
-# Install (Native style without installpkg)
+# Install
 fn_pkg_install_local() {
     local target_file="$1"
     [ -f "$target_file" ] || {
@@ -385,25 +378,26 @@ fn_pkg_install_local() {
     printf " %s %s-%s %s\n" \
         "$PACKAGE_NAME" "$PACKAGE_VERSION" "$PACKAGE_RELEASE" "$PACKAGE_ARCH"
 
-    # Extract contents safely to root
     tar -xf "$target_file" -C / || {
         ui_error "Failed to extract $PACKAGE_FILE"
         return 1
     }
 
-    # Handle post-install scriptlet (doinst.sh) natively
     if [ -f /install/doinst.sh ]; then
         (cd / && sh /install/doinst.sh >/dev/null 2>&1)
     fi
     [ -d /install ] && rm -rf /install
 
-    # Write Slackware-compatible package log to /var/log/packages/
     fn_write_native_metadata "$target_file"
     fn_pkg_post_actions "$PACKAGE_NAME"
 }
 
 fn_pkg_install() {
-    local local_install=false name ONE
+    local ONE name
+    local local_install=false
+    local to_install=()
+
+    # Check local files first
     for ONE in "$@"; do
         if [ -f "$ONE" ]; then
             local_install=true
@@ -411,26 +405,45 @@ fn_pkg_install() {
             if ls "$LOGDIR/$name-"* >/dev/null 2>&1; then
                 ui_warning "$ONE is already installed"
             else
-                ui_section "Installing package..."
-                fn_pkg_install_local "$ONE"
+                to_install+=("$ONE")
             fi
         fi
     done
-    [ "$local_install" = true ] && return
 
+    if [ "$local_install" = true ]; then
+        if [ ${#to_install[@]} -eq 0 ]; then
+            printf "\n${BOLD}::${RESET} Nothing to do.\n"
+            return 0
+        fi
+        ui_section "Installing package(s)..."
+        for ONE in "${to_install[@]}"; do
+            fn_pkg_install_local "$ONE"
+        done
+        return 0
+    fi
+
+    # Remote packages verification
     fn_check_pkgmatch_exists "$@"
+
+    # Filter out already installed packages, warning for each, and queue the rest
     for ONE in "$@"; do
         if ls "$LOGDIR/$ONE-"* >/dev/null 2>&1; then
             ui_warning "$ONE is already installed"
-            return 1
+        else
+            to_install+=("$ONE")
         fi
     done
 
+    if [ ${#to_install[@]} -eq 0 ]; then
+        printf "\n${BOLD}::${RESET} All requested packages are already installed. Nothing to do.\n"
+        return 0
+    fi
+
     ui_section "Downloading packages..."
-    fn_pkg_download_all "$@"
+    fn_pkg_download_all "${to_install[@]}"
 
     printf "\n${BOLD}::${RESET} Installing packages...\n"
-    for ONE in "$@"; do
+    for ONE in "${to_install[@]}"; do
         local pkgmatch file
         pkgmatch="$(fn_get_pkgmatch "$ONE")"
         file="${pkgmatch##*/}"
@@ -439,7 +452,7 @@ fn_pkg_install() {
     printf "\n${BOLD}::${RESET} ${BRIGHT_GREEN}Installation complete${RESET}\n"
 }
 
-# Remove (Native style without removepkg)
+# Remove
 fn_pkg_remove() {
     ui_section "Removing packages..."
     local i pkg_log file removed_count=0
@@ -455,7 +468,6 @@ fn_pkg_remove() {
             local real_pkg_name="${pkg_log##*/}"
             printf " removing %s\n" "$real_pkg_name"
             
-            # Delegate to native removepkg to handle file cleanup safely
             removepkg "$real_pkg_name" >/dev/null 2>&1
 
             fn_pkg_post_actions "${real_pkg_name%%-*}"
@@ -470,13 +482,14 @@ fn_pkg_remove() {
     
     if [ "$removed_count" -gt 0 ]; then
         printf "\n${BOLD}::${RESET} ${BRIGHT_GREEN}Removal complete${RESET}\n"
+    else
+        return 1
     fi
 }
 
 # Post-install cache updates
 fn_pkg_post_actions() {
     local target_pkgname="$1"
-    # Find matching log file for file-checking
     local pkg_log
     pkg_log="$(ls "$LOGDIR/$target_pkgname-"[0-9]* 2>/dev/null | head -n 1)"
     [ -f "$pkg_log" ] || return
@@ -532,5 +545,5 @@ case "$1" in
     rm) shift; [ $# -eq 0 ] && { ui_error "No packages specified"; exit 1; }; fn_pkg_remove "$@" ;;
     cc) fn_pkg_clean_cache ;;
     li) fn_pkg_list_installed ;;
-    *) fn_pkg_show_help ;;
+    *) fn_pkg_show_help; exit 1 ;;
 esac
