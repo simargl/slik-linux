@@ -476,7 +476,6 @@ fn_pkg_install() {
         return 0
     fi
 
-    ui_section "Downloading packages..."
     fn_pkg_download_all "${to_install[@]}"
 
     printf "\n${BOLD}::${RESET} Installing packages...\n"
