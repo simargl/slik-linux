@@ -50,6 +50,7 @@ libpcap
 libsamplerate
 libsigc++
 libsndfile
+libssh
 libtheora
 libva
 libvdpau
