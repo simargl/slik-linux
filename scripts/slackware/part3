@@ -9,10 +9,13 @@ at-spi2-atk
 atk
 audiofile
 bluez
+celt
 conky
+db48
 esound
 feh
 ffmpeg
+ffmpeg4
 fftw
 flac
 fltk
@@ -25,6 +28,7 @@ gtkglext
 gvfs
 imlib2
 iproute2
+jack
 jemalloc
 keyutils
 krb5
@@ -72,8 +76,10 @@ opencore-amr
 opus
 orc
 pangox-compat
+pcre2
 pulseaudio
 rtmpdump
+rubberband
 samba
 sbc
 schroedinger
