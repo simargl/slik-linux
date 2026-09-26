@@ -135,7 +135,7 @@ pixman
 pkg-config
 polkit
 poppler
-pygobject3-python3
+pygobject3
 python3
 randrproto
 renderproto

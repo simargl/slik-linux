@@ -6,6 +6,7 @@
 VERSION="14.2"
 MAIN_MIRROR="https://mirror.de.leaseweb.net/slackware/slackware64-$VERSION"
 OTHER_MIRRORS=(
+    "https://ponce.cc/slackware/slackware64-$VERSION/packages"
     "https://slackware.uk/salix/x86_64/$VERSION"
     "https://slackware.uk/salix/x86_64/extra-$VERSION"
 )
@@ -140,7 +141,7 @@ fn_repo_update() {
         extract_package_info "$MAIN_MIRROR" "$TMP_DIR/PACKAGES.TXT" >> "$DBPATH/packages.db"
     rm -rf "$TMP_DIR"
 
-    printf "\n ${BOLD}Salix${RESET}\n"
+    printf "\n ${BOLD}Other${RESET}\n"
     for repo_url in "${OTHER_MIRRORS[@]}"; do
         repo_name="${repo_url##*/}"
         printf " %s" "$repo_name"
