@@ -230,38 +230,63 @@ fn_check_pkgmatch_exists() {
 
 # Download
 fn_pkg_download() {
-    local pkg_name="$1" pkgmatch file
+    local pkg_name="$1"
+    local pkgmatch file
     pkgmatch="$(fn_get_pkgmatch "$pkg_name")"
-    [ -z "$pkgmatch" ] && { ui_error "Unable to locate package $pkg_name"; return 1; }
-
+    [ -z "$pkgmatch" ] && return 1
     file="${pkgmatch##*/}"
-    if [ ! -f "$CACHEDIR/$file" ]; then
-        printf " %s" "$file"
-        wget -q -nv --no-check-certificate "$pkgmatch" -P "$CACHEDIR"
-        if [ ! -f "$CACHEDIR/$file" ]; then
-            printf " ${BRIGHT_RED}failed${RESET}\n"
-            ui_error "$file download failed"
-            return 1
-        fi
-        printf " ${BRIGHT_GREEN}done${RESET}\n"
-    else
-        printf " %s ${DIM}[cached]${RESET}\n" "$file"
+    if [ -f "$CACHEDIR/$file" ]; then
+        return 0
     fi
+    wget -q --no-check-certificate "$pkgmatch" -P "$CACHEDIR" \
+        >/dev/null 2>&1
+
+    [ -f "$CACHEDIR/$file" ]
 }
 
 fn_pkg_download_all() {
     fn_check_pkgmatch_exists "$@"
-    local max_parallel=7 pids=() pkg
-    for pkg in "$@"; do
+    local max_parallel=7
+    local pids=()
+    local packages=("$@")
+    local failed=()
+    local pkg pid i
+    local file pkgmatch
+    ui_section "Downloading packages..."
+    for pkg in "${packages[@]}"; do
         fn_pkg_download "$pkg" &
         pids+=($!)
         if [ "${#pids[@]}" -ge "$max_parallel" ]; then
             wait "${pids[0]}"
-            pids=("${pids[@]:1}") # Shift the array to remove the finished PID
+            pids=("${pids[@]:1}")
         fi
     done
-    wait
+    for pid in "${pids[@]}"; do
+        wait "$pid"
+    done
+    for pkg in "${packages[@]}"; do
+        pkgmatch="$(fn_get_pkgmatch "$pkg")"
+        file="${pkgmatch##*/}"
+
+        if [ -f "$CACHEDIR/$file" ]; then
+            if [ -f "$CACHEDIR/$file" ]; then
+                printf " %-50s ${BRIGHT_GREEN}done${RESET}\n" "$file"
+            fi
+        else
+            printf " %-50s ${BRIGHT_RED}failed${RESET}\n" "$file"
+            failed+=("$pkg")
+        fi
+    done
+    if [ "${#failed[@]}" -gt 0 ]; then
+        printf "\n"
+        for pkg in "${failed[@]}"; do
+            ui_error "$pkg download failed"
+        done
+        return 1
+    fi
+    printf "\n${BOLD}::${RESET} ${BRIGHT_GREEN}All packages downloaded${RESET}\n"
 }
+
 
 # Extract Single
 fn_pkg_extract() {
@@ -321,32 +346,37 @@ fn_write_native_metadata() {
 
 fn_pkg_extract_all() {
     local destdir="root.x86_64"
+    local pkg_found=0
+    local current_file base
+    local name_len padding
     ui_section "Extracting packages..."
     mkdir -p "$destdir/var/log/packages" "$destdir/var/log/scripts"
-    
-    local pkg_found=0
     for i in "$CACHEDIR"/*.t?z ./*.t?z; do
         [[ -e "$i" ]] || continue
         pkg_found=1
-        local current_file="$i"
-        local base="${current_file##*/}"
+        current_file="$i"
+        base="${current_file##*/}"
         base="${base%.t?z}"
-        
-        printf " %s" "$base"
         tar -xf "$current_file" -C "$destdir"
-        
         if [ -f "$destdir/install/doinst.sh" ]; then
-            (cd "$destdir" && sh ./install/doinst.sh 2>/dev/null)
-            cp "$destdir/install/doinst.sh" "$destdir/var/log/scripts/$base"
+            (
+                cd "$destdir" &&
+                sh ./install/doinst.sh 2>/dev/null
+            )
+            cp "$destdir/install/doinst.sh" \
+                "$destdir/var/log/scripts/$base"
             chmod +x "$destdir/var/log/scripts/$base"
         else
             touch "$destdir/var/log/scripts/$base"
         fi
-        
         fn_write_native_metadata "$current_file" "$destdir"
-        [ -d "$destdir/install" ] && rm -rf "$destdir/install"
-        
-        printf " ${BRIGHT_GREEN}done${RESET}\n"
+        [ -d "$destdir/install" ] &&
+            rm -rf "$destdir/install"
+        printf " %s" "$base"
+        name_len=${#base}
+        padding=$((51 - name_len))
+        [ "$padding" -lt 1 ] && padding=1
+        printf "%*s${BRIGHT_GREEN}done${RESET}\n" "$padding" ""
     done
 
     if [ "$pkg_found" -eq 0 ]; then
@@ -354,6 +384,7 @@ fn_pkg_extract_all() {
         return 1
     fi
 }
+
 
 # Install
 fn_pkg_install_local() {
