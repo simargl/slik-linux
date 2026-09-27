@@ -193,7 +193,8 @@ fn_pkg_search() {
     awk -F'|' -v term="$search_term" '
         BEGIN { IGNORECASE=1 }
         index($1,term) || index($6,term)
-    ' "$DBPATH/packages.db" > "$tmp_results"
+    ' "$DBPATH/packages.db" |
+    sort -t'|' -k1,1 -k2,2V > "$tmp_results"
 
     while IFS='|' read -r name version arch release url desc; do
         [ -z "$name" ] && continue
