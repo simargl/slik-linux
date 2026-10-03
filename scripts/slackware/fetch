@@ -354,82 +354,55 @@ fn_pkg_extract_all() {
     local destdir="root.x86_64"
     local pkg_found=0
     local current_file base
+    local script script_base
     local name_len padding
     local failed=0
 
     ui_section "Extracting packages..."
 
-    mkdir -p "$destdir/var/log/packages" "$destdir/var/log/scripts" || {
-        ui_error "Unable to create extraction directory: $destdir"
-        return 1
-    }
+    mkdir -p "$destdir/var/log/packages" "$destdir/var/log/scripts"
+
+    # ============================================================
+    # PASS 1: Extract ALL packages
+    # ============================================================
 
     for current_file in "$CACHEDIR"/*.t?z ./*.t?z; do
         [[ -e "$current_file" ]] || continue
-        pkg_found=1
 
+        pkg_found=1
         base="${current_file##*/}"
-        base="${base%.txz}"
-        base="${base%.tgz}"
-        base="${base%.tlz}"
-        base="${base%.tbz}"
+        base="${base%.t?z}"
 
         printf " %s" "$base"
 
-        # Extract directly into the target root.
-        #
-        # IMPORTANT:
-        # Do not pipe tar through stdout or another command here.
-        # Package contents must go to the destination directory.
-        if ! tar -xpf "$current_file" -C "$destdir"; then
+        if ! tar -xf "$current_file" -C "$destdir"; then
             printf " ${BRIGHT_RED}failed${RESET}\n"
-            ui_error "Failed to extract $current_file"
+            ui_error "Failed to extract $base"
             failed=1
             continue
         fi
 
-        # Run the package post-install script inside the target root.
+        # Save doinst.sh for the second pass.
         if [ -f "$destdir/install/doinst.sh" ]; then
-            if ! (
-                cd "$destdir" &&
-                sh ./install/doinst.sh
-            ); then
-                printf " ${BRIGHT_RED}failed${RESET}\n"
-                ui_error "doinst.sh failed for $base"
-                failed=1
-                continue
-            fi
-
             cp "$destdir/install/doinst.sh" \
                 "$destdir/var/log/scripts/$base" || {
                 printf " ${BRIGHT_RED}failed${RESET}\n"
-                ui_error "Unable to save doinst.sh for $base"
+                ui_error "Failed to save doinst.sh for $base"
                 failed=1
                 continue
             }
 
             chmod +x "$destdir/var/log/scripts/$base"
         else
-            : > "$destdir/var/log/scripts/$base"
+            touch "$destdir/var/log/scripts/$base"
         fi
 
-        # Generate Slackware package metadata.
-        if ! fn_write_native_metadata "$current_file" "$destdir"; then
-            printf " ${BRIGHT_RED}failed${RESET}\n"
-            ui_error "Unable to generate metadata for $base"
-            failed=1
-            continue
-        fi
+        fn_write_native_metadata "$current_file" "$destdir"
 
-        # install/ is package-private metadata and should not remain
-        # in the resulting filesystem tree.
+        # Remove package's temporary install directory.
         rm -rf "$destdir/install"
 
-        name_len=${#base}
-        padding=$((51 - name_len))
-        [ "$padding" -lt 1 ] && padding=1
-
-        printf "%*s${BRIGHT_GREEN}done${RESET}\n" "$padding" ""
+        printf " ${BRIGHT_GREEN}done${RESET}\n"
     done
 
     if [ "$pkg_found" -eq 0 ]; then
@@ -438,12 +411,46 @@ fn_pkg_extract_all() {
     fi
 
     if [ "$failed" -ne 0 ]; then
-        printf "\n${BOLD}::${RESET} ${BRIGHT_RED}One or more packages failed to extract${RESET}\n"
+        ui_error "One or more packages failed during extraction."
         return 1
     fi
 
     printf "\n${BOLD}::${RESET} ${BRIGHT_GREEN}All packages extracted${RESET}\n"
+
+    # ============================================================
+    # PASS 2: Run ALL doinst.sh scripts
+    # ============================================================
+
+    ui_section "Running package installation scripts..."
+
+    for script in "$destdir/var/log/scripts"/*; do
+        [ -f "$script" ] || continue
+        [ -s "$script" ] || continue
+
+        script_base="${script##*/}"
+
+        printf " %s" "$script_base"
+
+        if (
+            cd "$destdir" &&
+            /bin/bash "/var/log/scripts/$script_base"
+        ); then
+            printf " ${BRIGHT_GREEN}done${RESET}\n"
+        else
+            printf " ${BRIGHT_RED}failed${RESET}\n"
+            ui_error "doinst.sh failed for $script_base"
+            failed=1
+        fi
+    done
+
+    if [ "$failed" -ne 0 ]; then
+        printf "\n${BOLD}::${RESET} ${BRIGHT_RED}Package installation scripts completed with errors${RESET}\n"
+        return 1
+    fi
+
+    printf "\n${BOLD}::${RESET} ${BRIGHT_GREEN}All package installation scripts completed${RESET}\n"
 }
+
 
 
 # Install
