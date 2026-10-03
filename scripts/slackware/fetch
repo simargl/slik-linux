@@ -308,10 +308,15 @@ fn_write_native_metadata() {
     local target_file="$1"
     local destdir="${2:-}"
     local base="${target_file##*/}"
-    base="${base%.t?z}"
-    
+
+    base="${base%.txz}"
+    base="${base%.tgz}"
+    base="${base%.tlz}"
+    base="${base%.tbz}"
+
     local log_dir="${destdir:-}/var/log/packages"
     local script_dir="${destdir:-}/var/log/scripts"
+
     mkdir -p "$log_dir" "$script_dir"
     
     local log_file="$log_dir/$base"
@@ -350,33 +355,80 @@ fn_pkg_extract_all() {
     local pkg_found=0
     local current_file base
     local name_len padding
+    local failed=0
+
     ui_section "Extracting packages..."
-    mkdir -p "$destdir/var/log/packages" "$destdir/var/log/scripts"
-    for i in "$CACHEDIR"/*.t?z ./*.t?z; do
-        [[ -e "$i" ]] || continue
+
+    mkdir -p "$destdir/var/log/packages" "$destdir/var/log/scripts" || {
+        ui_error "Unable to create extraction directory: $destdir"
+        return 1
+    }
+
+    for current_file in "$CACHEDIR"/*.t?z ./*.t?z; do
+        [[ -e "$current_file" ]] || continue
         pkg_found=1
-        current_file="$i"
+
         base="${current_file##*/}"
-        base="${base%.t?z}"
-        tar -xf "$current_file" -C "$destdir"
+        base="${base%.txz}"
+        base="${base%.tgz}"
+        base="${base%.tlz}"
+        base="${base%.tbz}"
+
+        printf " %s" "$base"
+
+        # Extract directly into the target root.
+        #
+        # IMPORTANT:
+        # Do not pipe tar through stdout or another command here.
+        # Package contents must go to the destination directory.
+        if ! tar -xpf "$current_file" -C "$destdir"; then
+            printf " ${BRIGHT_RED}failed${RESET}\n"
+            ui_error "Failed to extract $current_file"
+            failed=1
+            continue
+        fi
+
+        # Run the package post-install script inside the target root.
         if [ -f "$destdir/install/doinst.sh" ]; then
-            (
+            if ! (
                 cd "$destdir" &&
-                sh ./install/doinst.sh 2>/dev/null
-            )
+                sh ./install/doinst.sh
+            ); then
+                printf " ${BRIGHT_RED}failed${RESET}\n"
+                ui_error "doinst.sh failed for $base"
+                failed=1
+                continue
+            fi
+
             cp "$destdir/install/doinst.sh" \
-                "$destdir/var/log/scripts/$base"
+                "$destdir/var/log/scripts/$base" || {
+                printf " ${BRIGHT_RED}failed${RESET}\n"
+                ui_error "Unable to save doinst.sh for $base"
+                failed=1
+                continue
+            }
+
             chmod +x "$destdir/var/log/scripts/$base"
         else
-            touch "$destdir/var/log/scripts/$base"
+            : > "$destdir/var/log/scripts/$base"
         fi
-        fn_write_native_metadata "$current_file" "$destdir"
-        [ -d "$destdir/install" ] &&
-            rm -rf "$destdir/install"
-        printf " %s" "$base"
+
+        # Generate Slackware package metadata.
+        if ! fn_write_native_metadata "$current_file" "$destdir"; then
+            printf " ${BRIGHT_RED}failed${RESET}\n"
+            ui_error "Unable to generate metadata for $base"
+            failed=1
+            continue
+        fi
+
+        # install/ is package-private metadata and should not remain
+        # in the resulting filesystem tree.
+        rm -rf "$destdir/install"
+
         name_len=${#base}
         padding=$((51 - name_len))
         [ "$padding" -lt 1 ] && padding=1
+
         printf "%*s${BRIGHT_GREEN}done${RESET}\n" "$padding" ""
     done
 
@@ -384,6 +436,13 @@ fn_pkg_extract_all() {
         ui_error "No package archives found in cache or current directory."
         return 1
     fi
+
+    if [ "$failed" -ne 0 ]; then
+        printf "\n${BOLD}::${RESET} ${BRIGHT_RED}One or more packages failed to extract${RESET}\n"
+        return 1
+    fi
+
+    printf "\n${BOLD}::${RESET} ${BRIGHT_GREEN}All packages extracted${RESET}\n"
 }
 
 
