@@ -304,49 +304,58 @@ fn_pkg_extract() {
 }
 
 # Native Metadata & Logging Generation
+# Native Metadata & Logging Generation
 fn_write_native_metadata() {
     local target_file="$1"
     local destdir="${2:-}"
     local base="${target_file##*/}"
-
-    base="${base%.txz}"
-    base="${base%.tgz}"
-    base="${base%.tlz}"
-    base="${base%.tbz}"
+    base="${base%.t?z}"
 
     local log_dir="${destdir:-}/var/log/packages"
     local script_dir="${destdir:-}/var/log/scripts"
 
     mkdir -p "$log_dir" "$script_dir"
-    
+
     local log_file="$log_dir/$base"
     local script_file="$script_dir/$base"
-    
-    local unressed_size
-    unressed_size=$(tar -tvf "$target_file" 2>/dev/null | awk '{s+=$3} END {print s}')
+
+    local uncompressed_size
+    uncompressed_size=$(tar -tvf "$target_file" 2>/dev/null |
+        awk '{s+=$3} END {print s+0}')
 
     {
         printf "PACKAGE NAME:      %s\n" "$base"
-        printf "COMPRESSED PACKAGE SIZE:     %s\n" "$(du -h "$target_file" | awk '{print $1}')"
-        printf "UNCOMPRESSED PACKAGE SIZE:     %s\n" "$unressed_size"
+        printf "COMPRESSED PACKAGE SIZE:     %s\n" \
+            "$(du -h "$target_file" | awk '{print $1}')"
+        printf "UNCOMPRESSED PACKAGE SIZE:     %s\n" \
+            "$uncompressed_size"
         printf "PACKAGE LOCATION: %s\n" "$target_file"
         printf "PACKAGE DESCRIPTION:\n"
-        
-        if tar -tOf "$target_file" install/slack-desc >/dev/null 2>&1; then
+
+        if tar -xOf "$target_file" install/slack-desc >/dev/null 2>&1; then
             tar -xOf "$target_file" install/slack-desc 2>/dev/null
         else
-            printf "%s:     %s: Native package installed via fetch\n" "${base%%-*}" "$base"
+            printf "%s:     %s: Native package installed via fetch\n" \
+                "${base%%-*}" "$base"
         fi
-        
+
         printf "FILE LIST:\n"
-        tar -tf "$target_file" | LC_COLLATE=C sort
+        tar -tf "$target_file" 2>/dev/null | LC_COLLATE=C sort
     } > "$log_file"
 
-    if tar -tf "$target_file" | grep -q '^install/doinst.sh'; then
-        tar -O -xf "$target_file" install/doinst.sh > "$script_file"
+    # Save doinst.sh only.
+    # NEVER execute it here.
+    if tar -tf "$target_file" 2>/dev/null |
+        grep -qx 'install/doinst.sh'; then
+
+        if ! tar -xOf "$target_file" install/doinst.sh > "$script_file"; then
+            ui_error "Failed to extract doinst.sh from $base"
+            return 1
+        fi
+
         chmod +x "$script_file"
     else
-        touch "$script_file"
+        : > "$script_file"
     fi
 }
 
@@ -354,55 +363,58 @@ fn_pkg_extract_all() {
     local destdir="root.x86_64"
     local pkg_found=0
     local current_file base
-    local script script_base
     local name_len padding
-    local failed=0
+    local script script_base
+    local script_failed=0
 
     ui_section "Extracting packages..."
 
-    mkdir -p "$destdir/var/log/packages" "$destdir/var/log/scripts"
+    mkdir -p \
+        "$destdir/var/log/packages" \
+        "$destdir/var/log/scripts"
 
-    # ============================================================
-    # PASS 1: Extract ALL packages
-    # ============================================================
-
-    for current_file in "$CACHEDIR"/*.t?z ./*.t?z; do
-        [[ -e "$current_file" ]] || continue
+    # ------------------------------------------------------------
+    # PASS 1: Extract ALL packages.
+    # Do NOT execute doinst.sh here.
+    # ------------------------------------------------------------
+    for i in "$CACHEDIR"/*.t?z ./*.t?z; do
+        [[ -e "$i" ]] || continue
 
         pkg_found=1
+        current_file="$i"
+
         base="${current_file##*/}"
         base="${base%.t?z}"
 
-        printf " %s" "$base"
-
         if ! tar -xf "$current_file" -C "$destdir"; then
-            printf " ${BRIGHT_RED}failed${RESET}\n"
+            printf " %s" "$base"
+            name_len=${#base}
+            padding=$((51 - name_len))
+            [ "$padding" -lt 1 ] && padding=1
+            printf "%*s${BRIGHT_RED}failed${RESET}\n" "$padding" ""
             ui_error "Failed to extract $base"
-            failed=1
             continue
         fi
 
-        # Save doinst.sh for the second pass.
-        if [ -f "$destdir/install/doinst.sh" ]; then
-            cp "$destdir/install/doinst.sh" \
-                "$destdir/var/log/scripts/$base" || {
-                printf " ${BRIGHT_RED}failed${RESET}\n"
-                ui_error "Failed to save doinst.sh for $base"
-                failed=1
-                continue
-            }
-
-            chmod +x "$destdir/var/log/scripts/$base"
-        else
-            touch "$destdir/var/log/scripts/$base"
+        # Generate package metadata and save doinst.sh.
+        if ! fn_write_native_metadata "$current_file" "$destdir"; then
+            printf " %s" "$base"
+            name_len=${#base}
+            padding=$((51 - name_len))
+            [ "$padding" -lt 1 ] && padding=1
+            printf "%*s${BRIGHT_RED}failed${RESET}\n" "$padding" ""
+            continue
         fi
 
-        fn_write_native_metadata "$current_file" "$destdir"
+        # Remove package installer metadata from root filesystem.
+        [ -d "$destdir/install" ] &&
+            rm -rf "$destdir/install"
 
-        # Remove package's temporary install directory.
-        rm -rf "$destdir/install"
-
-        printf " ${BRIGHT_GREEN}done${RESET}\n"
+        printf " %s" "$base"
+        name_len=${#base}
+        padding=$((51 - name_len))
+        [ "$padding" -lt 1 ] && padding=1
+        printf "%*s${BRIGHT_GREEN}done${RESET}\n" "$padding" ""
     done
 
     if [ "$pkg_found" -eq 0 ]; then
@@ -410,17 +422,10 @@ fn_pkg_extract_all() {
         return 1
     fi
 
-    if [ "$failed" -ne 0 ]; then
-        ui_error "One or more packages failed during extraction."
-        return 1
-    fi
-
-    printf "\n${BOLD}::${RESET} ${BRIGHT_GREEN}All packages extracted${RESET}\n"
-
-    # ============================================================
-    # PASS 2: Run ALL doinst.sh scripts
-    # ============================================================
-
+    # ------------------------------------------------------------
+    # PASS 2: Run ALL doinst.sh scripts.
+    # All packages are now extracted, including bash.
+    # ------------------------------------------------------------
     ui_section "Running package installation scripts..."
 
     for script in "$destdir/var/log/scripts"/*; do
@@ -431,26 +436,22 @@ fn_pkg_extract_all() {
 
         printf " %s" "$script_base"
 
-        if (
-            cd "$destdir" &&
-            /bin/bash "/var/log/scripts/$script_base"
-        ); then
+        if chroot "$destdir" /bin/sh "/var/log/scripts/$script_base" \
+            >/dev/null 2>&1; then
             printf " ${BRIGHT_GREEN}done${RESET}\n"
         else
             printf " ${BRIGHT_RED}failed${RESET}\n"
             ui_error "doinst.sh failed for $script_base"
-            failed=1
+            script_failed=1
         fi
     done
 
-    if [ "$failed" -ne 0 ]; then
-        printf "\n${BOLD}::${RESET} ${BRIGHT_RED}Package installation scripts completed with errors${RESET}\n"
+    if [ "$script_failed" -ne 0 ]; then
         return 1
     fi
 
-    printf "\n${BOLD}::${RESET} ${BRIGHT_GREEN}All package installation scripts completed${RESET}\n"
+    printf "\n${BOLD}::${RESET} ${BRIGHT_GREEN}All packages extracted${RESET}\n"
 }
-
 
 
 # Install
