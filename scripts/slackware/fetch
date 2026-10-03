@@ -304,15 +304,20 @@ fn_pkg_extract() {
 }
 
 # Native Metadata & Logging Generation
-# Native Metadata & Logging Generation
 fn_write_native_metadata() {
     local target_file="$1"
     local destdir="${2:-}"
     local base="${target_file##*/}"
-    base="${base%.t?z}"
 
-    local log_dir="${destdir:-}/var/log/packages"
-    local script_dir="${destdir:-}/var/log/scripts"
+    # Remove exactly one Slackware archive suffix.
+    case "$base" in
+        *.txz|*.tgz|*.tlz|*.tbz)
+            base="${base%.*}"
+            ;;
+    esac
+
+    local log_dir="${destdir:+$destdir}/var/log/packages"
+    local script_dir="${destdir:+$destdir}/var/log/scripts"
 
     mkdir -p "$log_dir" "$script_dir"
 
@@ -321,51 +326,44 @@ fn_write_native_metadata() {
 
     local uncompressed_size
     uncompressed_size=$(tar -tvf "$target_file" 2>/dev/null |
-        awk '{s+=$3} END {print s+0}')
+        awk '{s += $3} END {print s+0}')
 
     {
-        printf "PACKAGE NAME:      %s\n" "$base"
+        printf "PACKAGE NAME:     %s\n" "$base"
         printf "COMPRESSED PACKAGE SIZE:     %s\n" \
-            "$(du -h "$target_file" | awk '{print $1}')"
-        printf "UNCOMPRESSED PACKAGE SIZE:     %s\n" \
-            "$uncompressed_size"
+            "$(du -h "$target_file" 2>/dev/null | awk '{print $1}')"
+        printf "UNCOMPRESSED PACKAGE SIZE:     %s\n" "$uncompressed_size"
         printf "PACKAGE LOCATION: %s\n" "$target_file"
         printf "PACKAGE DESCRIPTION:\n"
 
-        if tar -xOf "$target_file" install/slack-desc >/dev/null 2>&1; then
+        if tar -tf "$target_file" 2>/dev/null |
+            grep -qx 'install/slack-desc'; then
             tar -xOf "$target_file" install/slack-desc 2>/dev/null
         else
-            printf "%s:     %s: Native package installed via fetch\n" \
-                "${base%%-*}" "$base"
+            printf "%s: %s\n" "${base%%-*}" "$base"
         fi
 
         printf "FILE LIST:\n"
         tar -tf "$target_file" 2>/dev/null | LC_COLLATE=C sort
     } > "$log_file"
 
-    # Save doinst.sh only.
-    # NEVER execute it here.
+    # Store the package's doinst.sh but DO NOT execute it here.
     if tar -tf "$target_file" 2>/dev/null |
         grep -qx 'install/doinst.sh'; then
 
-        if ! tar -xOf "$target_file" install/doinst.sh > "$script_file"; then
-            ui_error "Failed to extract doinst.sh from $base"
-            return 1
-        fi
-
+        tar -xOf "$target_file" install/doinst.sh > "$script_file"
         chmod +x "$script_file"
     else
         : > "$script_file"
     fi
 }
 
+
 fn_pkg_extract_all() {
     local destdir="root.x86_64"
     local pkg_found=0
     local current_file base
     local name_len padding
-    local script script_base
-    local script_failed=0
 
     ui_section "Extracting packages..."
 
@@ -373,47 +371,41 @@ fn_pkg_extract_all() {
         "$destdir/var/log/packages" \
         "$destdir/var/log/scripts"
 
-    # ------------------------------------------------------------
-    # PASS 1: Extract ALL packages.
-    # Do NOT execute doinst.sh here.
-    # ------------------------------------------------------------
-    for i in "$CACHEDIR"/*.t?z ./*.t?z; do
-        [[ -e "$i" ]] || continue
+    for current_file in "$CACHEDIR"/*.t?z ./*.t?z; do
+        [ -e "$current_file" ] || continue
 
         pkg_found=1
-        current_file="$i"
 
         base="${current_file##*/}"
-        base="${base%.t?z}"
 
+        case "$base" in
+            *.txz|*.tgz|*.tlz|*.tbz)
+                base="${base%.*}"
+                ;;
+        esac
+
+        # IMPORTANT:
+        # Extraction only. No doinst.sh is executed here.
         if ! tar -xf "$current_file" -C "$destdir"; then
-            printf " %s" "$base"
-            name_len=${#base}
-            padding=$((51 - name_len))
-            [ "$padding" -lt 1 ] && padding=1
-            printf "%*s${BRIGHT_RED}failed${RESET}\n" "$padding" ""
             ui_error "Failed to extract $base"
-            continue
+            return 1
         fi
 
-        # Generate package metadata and save doinst.sh.
-        if ! fn_write_native_metadata "$current_file" "$destdir"; then
-            printf " %s" "$base"
-            name_len=${#base}
-            padding=$((51 - name_len))
-            [ "$padding" -lt 1 ] && padding=1
-            printf "%*s${BRIGHT_RED}failed${RESET}\n" "$padding" ""
-            continue
-        fi
+        # Generate native package metadata and save doinst.sh.
+        fn_write_native_metadata "$current_file" "$destdir"
 
-        # Remove package installer metadata from root filesystem.
-        [ -d "$destdir/install" ] &&
+        # The install/ directory is only temporary package metadata.
+        # Remove it after extracting the actual package contents.
+        if [ -d "$destdir/install" ]; then
             rm -rf "$destdir/install"
+        fi
 
         printf " %s" "$base"
+
         name_len=${#base}
         padding=$((51 - name_len))
         [ "$padding" -lt 1 ] && padding=1
+
         printf "%*s${BRIGHT_GREEN}done${RESET}\n" "$padding" ""
     done
 
@@ -422,36 +414,9 @@ fn_pkg_extract_all() {
         return 1
     fi
 
-    # ------------------------------------------------------------
-    # PASS 2: Run ALL doinst.sh scripts.
-    # All packages are now extracted, including bash.
-    # ------------------------------------------------------------
-    ui_section "Running package installation scripts..."
-
-    for script in "$destdir/var/log/scripts"/*; do
-        [ -f "$script" ] || continue
-        [ -s "$script" ] || continue
-
-        script_base="${script##*/}"
-
-        printf " %s" "$script_base"
-
-        if chroot "$destdir" /bin/sh "/var/log/scripts/$script_base" \
-            >/dev/null 2>&1; then
-            printf " ${BRIGHT_GREEN}done${RESET}\n"
-        else
-            printf " ${BRIGHT_RED}failed${RESET}\n"
-            ui_error "doinst.sh failed for $script_base"
-            script_failed=1
-        fi
-    done
-
-    if [ "$script_failed" -ne 0 ]; then
-        return 1
-    fi
-
     printf "\n${BOLD}::${RESET} ${BRIGHT_GREEN}All packages extracted${RESET}\n"
 }
+
 
 
 # Install
