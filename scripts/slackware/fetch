@@ -371,34 +371,40 @@ fn_pkg_extract_all() {
         "$destdir/var/log/packages" \
         "$destdir/var/log/scripts"
 
+    #
+    # PHASE 1:
+    # Extract EVERYTHING first.
+    #
     for current_file in "$CACHEDIR"/*.t?z ./*.t?z; do
         [ -e "$current_file" ] || continue
 
         pkg_found=1
 
         base="${current_file##*/}"
+        base="${base%.txz}"
+        base="${base%.tgz}"
+        base="${base%.tlz}"
+        base="${base%.tbz}"
 
-        case "$base" in
-            *.txz|*.tgz|*.tlz|*.tbz)
-                base="${base%.*}"
-                ;;
-        esac
-
-        # IMPORTANT:
-        # Extraction only. No doinst.sh is executed here.
         if ! tar -xf "$current_file" -C "$destdir"; then
             ui_error "Failed to extract $base"
             return 1
         fi
 
-        # Generate native package metadata and save doinst.sh.
-        fn_write_native_metadata "$current_file" "$destdir"
+        #
+        # Save native package metadata and doinst.sh.
+        # Nothing is executed here.
+        #
+        fn_write_native_metadata "$current_file" "$destdir" || {
+            ui_error "Failed to create metadata for $base"
+            return 1
+        }
 
-        # The install/ directory is only temporary package metadata.
-        # Remove it after extracting the actual package contents.
-        if [ -d "$destdir/install" ]; then
-            rm -rf "$destdir/install"
-        fi
+        #
+        # install/ belongs to the package archive and is not part
+        # of the final filesystem.
+        #
+        [ -d "$destdir/install" ] && rm -rf "$destdir/install"
 
         printf " %s" "$base"
 
@@ -406,7 +412,8 @@ fn_pkg_extract_all() {
         padding=$((51 - name_len))
         [ "$padding" -lt 1 ] && padding=1
 
-        printf "%*s${BRIGHT_GREEN}done${RESET}\n" "$padding" ""
+        printf "%*s${BRIGHT_GREEN}done${RESET}\n" \
+            "$padding" ""
     done
 
     if [ "$pkg_found" -eq 0 ]; then
@@ -415,8 +422,92 @@ fn_pkg_extract_all() {
     fi
 
     printf "\n${BOLD}::${RESET} ${BRIGHT_GREEN}All packages extracted${RESET}\n"
-}
 
+    #
+    # PHASE 2:
+    # Bootstrap bash.
+    #
+    # Slackware's bash doinst.sh creates /bin/bash from
+    # /bin/bash4.new. Therefore it cannot itself be run through
+    # chroot /bin/bash before bash exists.
+    #
+    local bash_script=""
+    local script_file script_base
+
+    for script_file in "$destdir"/var/log/scripts/bash-*; do
+        [ -f "$script_file" ] || continue
+
+        bash_script="$script_file"
+        break
+    done
+
+    if [ -n "$bash_script" ] && [ -s "$bash_script" ]; then
+        ui_section "Bootstrapping bash..."
+
+        script_base="${bash_script##*/}"
+
+        if (
+            cd "$destdir" &&
+            /bin/sh "/var/log/scripts/$script_base"
+        ); then
+            printf " %s ${BRIGHT_GREEN}done${RESET}\n" "$script_base"
+        else
+            ui_error "Failed to bootstrap bash"
+            return 1
+        fi
+    fi
+
+    #
+    # Verify that the bootstrap actually produced /bin/bash.
+    #
+    if [ ! -x "$destdir/bin/bash" ]; then
+        ui_error "bash bootstrap failed: $destdir/bin/bash was not created"
+        return 1
+    fi
+
+    #
+    # PHASE 3:
+    # Now /bin/bash exists, so the remaining package scripts
+    # can safely run inside the target root.
+    #
+    ui_section "Running package installation scripts..."
+
+    local script_failed=0
+
+    for script_file in "$destdir"/var/log/scripts/*; do
+        [ -f "$script_file" ] || continue
+        [ -s "$script_file" ] || continue
+
+        script_base="${script_file##*/}"
+
+        #
+        # bash package was already executed during bootstrap.
+        #
+        case "$script_base" in
+            bash-*)
+                continue
+                ;;
+        esac
+
+        if chroot "$destdir" /bin/bash \
+            "/var/log/scripts/$script_base" \
+            >/dev/null 2>&1; then
+
+            printf " %s ${BRIGHT_GREEN}done${RESET}\n" "$script_base"
+        else
+            printf " %s ${BRIGHT_RED}failed${RESET}\n" "$script_base"
+            printf "error: doinst.sh failed for %s\n" "$script_base" >&2
+            script_failed=1
+        fi
+    done
+
+    if [ "$script_failed" -ne 0 ]; then
+        printf "\n${BOLD}::${RESET} ${BRIGHT_YELLOW}Some package installation scripts failed${RESET}\n"
+        return 1
+    fi
+
+    printf "\n${BOLD}::${RESET} ${BRIGHT_GREEN}Package scripts complete${RESET}\n"
+}
 
 
 # Install
